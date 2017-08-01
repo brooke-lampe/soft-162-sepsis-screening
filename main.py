@@ -10,7 +10,7 @@ class RestApp(App):
         super(RestApp, self).__init__(**kwargs)
 
     def connect(self):
-        self.openmrs_connection = RESTConnection('localhost', 8080, self.root.ids.username.text, self.root.ids.password.text)
+        self.openmrs_connection = RESTConnection(self.root.ids.authority.text, self.root.ids.port_number.text, self.root.ids.username.text, self.root.ids.password.text)
 
     def load_session(self):
         self.root.ids.session.clear_widgets()
