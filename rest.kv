@@ -7,6 +7,10 @@ ScreenManager:
                 text: 'OpenMRS Patient Information App'
                 font_size: '30sp'
                 color: (0.6, 0.1, 0.9)
+            Label:
+                text: 'Login Screen'
+                font_size: '24sp'
+                color: (1, 0, 0)
             BoxLayout:
                 orientation: 'horizontal'
                 Label:
@@ -18,6 +22,7 @@ ScreenManager:
                     id: authority
                     size_hint: 0.5, 1
                     font_size: '24sp'
+                    text: 'localhost'
             BoxLayout:
                 orientation: 'horizontal'
                 Label:
@@ -29,6 +34,7 @@ ScreenManager:
                     id: port_number
                     size_hint: 0.5, 1
                     font_size: '24sp'
+                    text: '8080'
             BoxLayout:
                 orientation: 'horizontal'
                 Label:
@@ -40,6 +46,7 @@ ScreenManager:
                     id: username
                     size_hint: 0.5, 1
                     font_size: '24sp'
+                    text: 'admin'
             BoxLayout:
                 orientation: 'horizontal'
                 Label:
@@ -52,6 +59,7 @@ ScreenManager:
                     password: True
                     size_hint: 0.5, 1
                     font_size: '24sp'
+                    text: 'Admin123'
             BoxLayout:
                 orientation: 'vertical'
                 Label:
@@ -82,6 +90,10 @@ ScreenManager:
                 text: 'OpenMRS Patient Information App'
                 font_size: '30sp'
                 color: (0.6, 0.1, 0.9)
+            Label:
+                text: 'Patient Selection Screen'
+                font_size: '24sp'
+                color: (1, 0, 0)
             BoxLayout:
                 orientation: 'horizontal'
                 Label:
@@ -132,27 +144,81 @@ ScreenManager:
                 text: 'OpenMRS Patient Information App'
                 font_size: '30sp'
                 color: (0.6, 0.1, 0.9)
+            Label:
+                text: 'Medications Screen'
+                font_size: '24sp'
+                color: (1, 0, 0)
             BoxLayout:
                 orientation: 'vertical'
                 id: medication_layout
             BoxLayout:
                 orientation: 'horizontal'
+                BoxLayout:
+                    orientation: 'vertical'
+                    Button:
+                        text: 'Log Out'
+                        on_press:
+                            root.ids.password.text = ''
+                            root.ids.session.text = ''
+                            root.ids.session2.text = ''
+                            root.ids.openmrs_id.text = ''
+                            root.ids.retrieve.text = ''
+                            root.ids.retrieve2.text = ''
+                            root.transition.direction = 'right'
+                            root.current = 'log_in'
+                            app.connect()
+                    Button:
+                        text: 'Return to Patient Selection Screen'
+                        on_press:
+                            root.ids.retrieve.text = ''
+                            root.ids.retrieve2.text = ''
+                            root.transition.direction = 'right'
+                            root.current = 'selection'
                 Button:
-                    text: 'Log Out'
+                    text: 'Confirm Medications'
                     on_press:
-                        root.ids.password.text = ''
-                        root.ids.session.text = ''
-                        root.ids.session2.text = ''
-                        root.ids.openmrs_id.text = ''
-                        root.ids.retrieve.text = ''
-                        root.ids.retrieve2.text = ''
-                        root.transition.direction = 'right'
-                        root.current = 'log_in'
-                        app.connect()
+                        root.transition.direction = 'left'
+                        root.current = 'determination'
+    Screen:
+        name: 'determination'
+        BoxLayout:
+            orientation: 'vertical'
+            Label:
+                text: 'OpenMRS Patient Information App'
+                font_size: '30sp'
+                color: (0.6, 0.1, 0.9)
+            Label:
+                text: 'Determination Screen'
+                font_size: '24sp'
+                color: (1, 0, 0)
+            BoxLayout:
+                orientation: 'vertical'
+                id: determination_layout
+            BoxLayout:
+                orientation: 'horizontal'
+                BoxLayout:
+                    orientation: 'vertical'
+                    Button:
+                        text: 'Log Out'
+                        on_press:
+                            root.ids.password.text = ''
+                            root.ids.session.text = ''
+                            root.ids.session2.text = ''
+                            root.ids.openmrs_id.text = ''
+                            root.ids.retrieve.text = ''
+                            root.ids.retrieve2.text = ''
+                            root.transition.direction = 'right'
+                            root.current = 'log_in'
+                            app.connect()
+                    Button:
+                        text: 'Return to Patient Selection Screen'
+                        on_press:
+                            root.ids.retrieve.text = ''
+                            root.ids.retrieve2.text = ''
+                            root.transition.direction = 'right'
+                            root.current = 'selection'
                 Button:
-                    text: 'Return to Patient Selection'
+                    text: 'Return to Medications Screen'
                     on_press:
-                        root.ids.retrieve.text = ''
-                        root.ids.retrieve2.text = ''
                         root.transition.direction = 'right'
-                        root.current = 'selection'
+                        root.current = 'medication'
