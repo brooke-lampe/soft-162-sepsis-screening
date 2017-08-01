@@ -39,7 +39,7 @@ class RestApp(App):
         for result in response['results']:
             patient_uuid = result['uuid']
             self.load_encounters(patient_uuid)
-            self.root.current = 'summary'
+            self.root.current = 'medication'
 
         if patient_uuid == 'NULL':
             self.root.ids.retrieve.text = 'Unable to retrieve patient information.'
@@ -67,56 +67,70 @@ class RestApp(App):
         self.display_vitals(data)
         self.display_labs(data)
 
+    #This function no longer shows data on the GUI, which has been prepped for the medication information.
+    #Instead, it prints information to the standard output.
+    #If we don't need this function, we can delete it.
+
+    #This function shows recent diagnosese for a patient
     def display_diagnosis(self, data):
         timestamp = 'N/A'
         diagnosis_array = []
 
-        diagnosis_layout = self.root.ids.diagnosis
-        diagnosis_timestamp_layout = self.root.ids.diagnosis_timestamp
         for i in range(len(data)):
             if data[i].find('Visit Diagnoses:') != -1:
                 timestamp = data[i + 1]
                 diagnosis_array.append(data[i])
                 diagnosis_array.append(data[i + 1])
 
+        print('Diagnosis')
+
         for j in range(len(diagnosis_array)):
             if diagnosis_array[j] == timestamp:
-                diagnosis_layout.add_widget(Label(text=diagnosis_array[j - 1]))
-                diagnosis_timestamp_layout.add_widget(Label(text=timestamp))
+                print(diagnosis_array[j - 1])
+                print(timestamp)
 
+    #This function no longer shows data on the GUI, which has been prepped for the medication information.
+    #Instead, it prints information to the standard output.
+    #If we don't need this function, we can delete it.
+
+    #This function shows the recent observations of a patient's vitals
     def display_vitals(self, data):
         vitals = ['Height (cm):', 'Weight (kg):', 'Temperature (C):', 'Pulse:', 'Respiratory rate:', 'Systolic blood pressure:', 'Diastolic blood pressure:', 'Blood oxygen saturation:']
         recent = 'N/A'
         timestamp = 'N/A'
 
-        vitals_layout = self.root.ids.vitals
-        vitals_timestamp_layout = self.root.ids.vitals_timestamp
+        print('Vitals')
+
         for vital in vitals:
             for i in range(len(data)):
                 if data[i].find(vital) != -1:
                     recent = data[i]
                     timestamp = data[i + 1]
-            vitals_layout.add_widget(Label(text=recent))
-            vitals_timestamp_layout.add_widget(Label(text=timestamp))
+            print(recent)
+            print(timestamp)
 
+    #This function no longer shows data on the GUI, which has been prepped for the medication information.
+    #Instead, it prints information to the standard output.
+    #If we don't need this function, we can delete it.
+
+    #This function shows a patient's recent lab results
     def display_labs(self, data):
         labs = ['Leukocytes (#/mL)', 'Blasts per 100 Leukocytes', 'Platelets', 'Partial Thromboplastin Time', 'Glucose', 'Lactate', 'Creatinine',
                 'Bilirubin Direct', 'Bilirubin Total', 'Blood Cultures, Bacteria', 'Blood Cultures, Fungus', 'Blood Cultures, Viruses', 'Urinalysis']
         recent = 'N/A'
         timestamp = 'N/A'
 
-        labs_layout = self.root.ids.labs
-        labs_timestamp_layout = self.root.ids.labs_timestamp
+        print('Labs')
+
         for lab in labs:
             for i in range(len(data)):
                 if data[i].find(lab) != -1:
                     recent = data[i]
                     timestamp = data[i + 1]
-            labs_layout.add_widget(Label(text=recent))
-            labs_timestamp_layout.add_widget(Label(text=timestamp))
+            print(recent)
+            print(timestamp)
 
     def on_encounters_not_loaded(self, request, error):
-        self.root.ids.patient.add_widget(Label(text='[Failed to load patient information.  Please try again.]'))
         Logger.error('RestApp: {error}'.format(error=error))
 
 
