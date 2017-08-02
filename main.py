@@ -1,7 +1,11 @@
+from datetime import *
+
 from kivy.app import App
 from kivy.logger import Logger
-from kivy.uix.label import Label
+
+from observations import Observation, Diagnosis
 from openmrs import RESTConnection
+from kivy.uix.label import Label
 
 
 class RestApp(App):
@@ -51,21 +55,86 @@ class RestApp(App):
         Logger.error('RestApp: {error}'.format(error=error))
 
     def load_encounters(self, patient_uuid):
-        encounters_request = 'encounter?patient={patient_uuid}&limit=10&v=full'.format(patient_uuid=patient_uuid)
-        self.openmrs_connection.send_request(encounters_request, None, self.on_encounters_loaded,
-                                             self.on_encounters_not_loaded, self.on_encounters_not_loaded)
+        self.openmrs_connection.send_request('visit?patient={patient_uuid}&v=full'.format(patient_uuid=patient_uuid), None,
+                self.on_encounters_loaded,
+                self.on_encounters_not_loaded, self.on_encounters_not_loaded)
 
     def on_encounters_loaded(self, request, response):
-        data = []
+        lab_observations = {}
+        vitals_observations = {}
+        diagnosis_observations = {}
 
-        for result in response['results']:
-            for ob in result['obs']:
-                data.append(ob['display'])
-                data.append(ob['obsDatetime'])
+        visits = response.get('results')
+        for visit in visits:
+            for encounter in visit.get('encounters'):
+                encounter_type = encounter.get('encounterType').get('display')
+                if encounter_type == 'Labs':
+                    lab_observations = self.populate_observation_dict('Labs', encounter, lab_observations)
+                if encounter_type == 'Vitals':
+                    vitals_observations = self.populate_observation_dict('Vitals', encounter, vitals_observations)
+                if encounter_type == 'Visit Note':
+                    for observation in encounter.get('obs'):
+                        if 'diagnosis' in observation.get('display'):
+                            diagnosis_observations = self.populate_diagnosis_dict(encounter, diagnosis_observations)
 
-        self.display_diagnosis(data)
-        self.display_vitals(data)
-        self.display_labs(data)
+    def populate_observation_dict(self, obs_type, encounter, obs_dict):
+            # create datetime object based on encounter time so we can easily compare them
+            date_time_temp = encounter.get('encounterDatetime').split('.')[0]
+            date_time = datetime.strptime(date_time_temp, '%Y-%m-%dT%H:%M:%S')
+            observations = encounter.get('obs')
+
+            # if the dictionary is empty just place the encounter info into it
+            # empty dictionaries evaluate to false
+            if not obs_dict:
+                for obs in observations:
+                    obs_string, obs_value = obs.get('display').split(':')
+                    obs_object = Observation(obs_type, obs_string.strip(), obs_value.strip(), date_time)
+                    obs_dict[obs_string.strip()] = obs_object
+                return obs_dict
+            else:
+                for obs in observations:
+                    obs_string, obs_value = obs.get('display').split(':')
+                    obs_string = obs_string.strip()
+                    obs_value = obs_value.strip()
+                    obs_object = Observation( obs_type, obs_string, obs_value, date_time)
+
+                    if obs_string in obs_dict:
+                        # if data entry is older than what is currently in the dictionary continue
+                        if obs_dict.get(obs_string).obs_datetime >= date_time:
+                            continue
+                        # if the data entry is newer update the dictionary
+                        elif obs_dict.get(obs_string).obs_datetime < date_time:
+                            obs_dict.update(obs_string, obs_object)
+                            continue
+                    # if observation is not found in the dict add it
+                    else:
+                        obs_dict[obs_string] = obs_object
+            return obs_dict
+
+    def populate_diagnosis_dict(self, encounter, obs_dict):
+        date_time_temp = encounter.get('encounterDatetime').split('.')[0]
+        date_time = datetime.strptime(date_time_temp, '%Y-%m-%dT%H:%M:%S')
+        observations = encounter.get('obs')
+        if not obs_dict:
+            for obs in observations:
+                # the last thing in the diagnosis string is the actual diagnosis
+                obs_diagnosis = obs.get('display').split(',')[-1]
+                obs_diagnosis = obs_diagnosis.strip()
+                obs_dict[obs_diagnosis] = Diagnosis(obs_diagnosis, date_time)
+            return obs_dict
+        else:
+            for obs in observations:
+                obs_diagnosis = obs.get('display').split(',')[-1]
+                obs_diagnosis = obs_diagnosis.strip()
+                if obs_diagnosis in obs_dict:
+                    if obs_dict.get(obs_diagnosis).obs_datetime >= date_time:
+                        continue
+                    elif obs_dict.get(obs_diagnosis).obs_datetime < date_time:
+                        obs_dict.update(obs_diagnosis, Diagnosis(obs_diagnosis, date_time))
+                        continue
+                else:
+                    obs_dict[obs_diagnosis] = Diagnosis(obs_diagnosis, date_time)
+        return obs_dict
 
     #This function no longer shows data on the GUI, which has been prepped for the medication information.
     #Instead, it prints information to the standard output.
