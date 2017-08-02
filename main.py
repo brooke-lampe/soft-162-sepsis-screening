@@ -5,6 +5,7 @@ from kivy.logger import Logger
 
 from observations import Observation, Diagnosis
 from openmrs import RESTConnection
+from kivy.uix.label import Label
 
 
 class RestApp(App):
