@@ -136,6 +136,60 @@ class RestApp(App):
                     obs_dict[obs_diagnosis] = Diagnosis(obs_diagnosis, date_time)
         return obs_dict
 
+    def determination(self, diagnosis, temperature, heart_rate, respiratory_rate, systolic_blood_pressure, diastolic_blood_pressure,
+                      glucose, leukocytes, blasts_per_100_leukocytes, lactate, creatinine, creatinine_baseline,
+                      bilirubin_total, colony_stimulating_factors, heparin, recombinant_human_erythropoientins):
+
+        SIRS_criteria = [0, 0, 0, 0, 0]
+        organ_dysfunction_criteria = [0, 0, 0, 0]
+        mean_arterial_pressure = (systolic_blood_pressure + (2 * diastolic_blood_pressure)) / 3
+
+        if temperature < 36 or temperature > 38.3:
+            SIRS_criteria[0] = 1
+        if heart_rate > 95:
+            SIRS_criteria[1] = 1
+        if respiratory_rate >= 21:
+            SIRS_criteria[2] = 1
+        if glucose >= 140 and glucose < 200:
+            SIRS_criteria[3] = 1
+            if diagnosis.find('Diabetes'):
+                SIRS_criteria[3] = 0
+        if leukocytes > 12000 or leukocytes < 4000 or blasts_per_100_leukocytes > 10:
+            SIRS_criteria[4] = 1
+            if colony_stimulating_factors:
+                SIRS_criteria[4] = 0
+
+        SIRS_total = SIRS_criteria[0] + SIRS_criteria[1] + SIRS_criteria[2] + SIRS_criteria[3] + SIRS_criteria[4]
+
+        if SIRS_total < 2:
+            return 'Continue Monitoring'
+
+        if lactate > 2:
+            organ_dysfunction_criteria[0] = 1
+        if systolic_blood_pressure < 90 or mean_arterial_pressure < 65:
+            organ_dysfunction_criteria[1] = 1
+        if creatinine - creatinine_baseline > 0.5:
+            organ_dysfunction_criteria[2] = 1
+        if bilirubin_total >= 2 and bilirubin_total < 10:
+            organ_dysfunction_criteria[3] = 1
+
+        organ_dysfunction_total = organ_dysfunction_criteria[0] + organ_dysfunction_criteria[1] + organ_dysfunction_criteria[2] + organ_dysfunction_criteria[3]
+
+        if organ_dysfunction_total > 0:
+            if organ_dysfunction_total == 1 and organ_dysfunction_criteria[2] == 1:
+                if diagnosis.find('ESRD'):
+                    return 'Continue Monitoring'
+                elif recombinant_human_erythropoientins:
+                    return 'Continue Monitoring'
+                else:
+                    'Sepsis Alert'
+            else:
+                'Sepsis Alert'
+        elif SIRS_total < 3:
+            return 'Continue Monitoring'
+        else:
+            return 'SIRS Alert'
+
     #This function no longer shows data on the GUI, which has been prepped for the medication information.
     #Instead, it prints information to the standard output.
     #If we don't need this function, we can delete it.
