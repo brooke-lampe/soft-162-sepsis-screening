@@ -3,6 +3,12 @@ __app_package__ = 'sepsis'
 
 class Observation:
 
+    #Data members
+    obs_type = ''
+    obs_string = ''
+    obs_value = 0
+    obs_datetime = ''
+
     def __init__(self, obs_type, obs_string, obs_value, obs_datetime):
         self.obs_type = obs_type
         self.obs_string = obs_string
@@ -18,6 +24,10 @@ class Observation:
 
 class Diagnosis:
 
+    #Data memebers
+    diagnosis_string = ''
+    obs_datetime = ''
+
     def __init__(self, diagnosis_string, obs_datetime):
         self.obs_string = diagnosis_string
         self.obs_datetime = obs_datetime
@@ -27,3 +37,24 @@ class Diagnosis:
 
     def get_datetime_string(self):
         return self.obs_datetime.strftime('%Y-%m-%d@%H:%M:%S')
+
+
+class Creatinine(Observation):
+
+    #Data memebers
+    obs_baseline = 0
+    visit_id = ''
+
+    def __init__(self, obs_type, obs_string, obs_value, obs_baseline,  obs_datetime, visit_uuid):
+        super(Creatinine, self).__init__(obs_type, obs_string, obs_value, obs_datetime)
+        self.obs_baseline = obs_baseline
+        self.visit_id = visit_uuid
+
+    def update_creatinine_reading(self, obs_value):
+        self.obs_value = obs_value
+
+    def update_baseline(self, obs_value):
+        self.obs_baseline = obs_value
+
+    def get_creatinine_change(self):
+        return float(self.obs_value) - float(self.obs_baseline)

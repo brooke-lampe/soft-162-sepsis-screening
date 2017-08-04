@@ -3,12 +3,17 @@ from datetime import *
 from kivy.app import App
 from kivy.logger import Logger
 
-from observations import Observation, Diagnosis
+from observations import Observation, Diagnosis, Creatinine
 from openmrs import RESTConnection
 from kivy.uix.label import Label
 
 
 class RestApp(App):
+
+    # Data members
+    lab_observations = {}
+    vitals_observations = {}
+    diagnosis_observations = {}
 
     def __init__(self, **kwargs):
         super(RestApp, self).__init__(**kwargs)
@@ -60,24 +65,21 @@ class RestApp(App):
                 self.on_encounters_not_loaded, self.on_encounters_not_loaded)
 
     def on_encounters_loaded(self, request, response):
-        lab_observations = {}
-        vitals_observations = {}
-        diagnosis_observations = {}
-
         visits = response.get('results')
         for visit in visits:
+            visit_uuid = visit.get('uuid')
             for encounter in visit.get('encounters'):
                 encounter_type = encounter.get('encounterType').get('display')
                 if encounter_type == 'Labs':
-                    lab_observations = self.populate_observation_dict('Labs', encounter, lab_observations)
+                    self.lab_observations = self.populate_observation_dict('Labs', encounter, self.lab_observations, visit_uuid)
                 if encounter_type == 'Vitals':
-                    vitals_observations = self.populate_observation_dict('Vitals', encounter, vitals_observations)
+                    self.vitals_observations = self.populate_observation_dict('Vitals', encounter, self.vitals_observations, visit_uuid)
                 if encounter_type == 'Visit Note':
                     for observation in encounter.get('obs'):
                         if 'diagnosis' in observation.get('display'):
-                            diagnosis_observations = self.populate_diagnosis_dict(encounter, diagnosis_observations)
+                            self.diagnosis_observations = self.populate_diagnosis_dict(encounter, self.diagnosis_observations)
 
-    def populate_observation_dict(self, obs_type, encounter, obs_dict):
+    def populate_observation_dict(self, obs_type, encounter, obs_dict, visit_uuid):
             # create datetime object based on encounter time so we can easily compare them
             date_time_temp = encounter.get('encounterDatetime').split('.')[0]
             date_time = datetime.strptime(date_time_temp, '%Y-%m-%dT%H:%M:%S')
@@ -88,7 +90,11 @@ class RestApp(App):
             if not obs_dict:
                 for obs in observations:
                     obs_string, obs_value = obs.get('display').split(':')
-                    obs_object = Observation(obs_type, obs_string.strip(), obs_value.strip(), date_time)
+                    # Creatinine readings require a baseline reading so the have to be handled seperately from everything else
+                    if obs_string == 'Creatinine in Blood (mg/dL)':
+                        obs_object = Creatinine('Labs', obs_string.strip(), obs_value, obs_value, date_time, visit_uuid)
+                    else:
+                        obs_object = Observation(obs_type, obs_string.strip(), obs_value.strip(), date_time)
                     obs_dict[obs_string.strip()] = obs_object
                 return obs_dict
             else:
@@ -96,9 +102,15 @@ class RestApp(App):
                     obs_string, obs_value = obs.get('display').split(':')
                     obs_string = obs_string.strip()
                     obs_value = obs_value.strip()
-                    obs_object = Observation( obs_type, obs_string, obs_value, date_time)
-
+                    obs_object = Observation(obs_type, obs_string, obs_value, date_time)
                     if obs_string in obs_dict:
+                        # if a second creatinine value is found under the same visit update the baseline
+                        if obs_string == 'Creatinine in Blood (mg/dL)':
+                            creat = obs_dict.get('Creatinine in Blood (mg/dL)')
+                            if creat.visit_id == visit_uuid:
+                                creat.update_baseline(obs_value)
+                                obs_dict[obs_string] = creat
+                                continue
                         # if data entry is older than what is currently in the dictionary continue
                         if obs_dict.get(obs_string).obs_datetime >= date_time:
                             continue
@@ -118,13 +130,29 @@ class RestApp(App):
         if not obs_dict:
             for obs in observations:
                 # the last thing in the diagnosis string is the actual diagnosis
-                obs_diagnosis = obs.get('display').split(',')[-1]
-                obs_diagnosis = obs_diagnosis.strip()
-                obs_dict[obs_diagnosis] = Diagnosis(obs_diagnosis, date_time)
+                obs_diagnosis = obs.get('display').split(':')[1]
+                obs_diagnosis = obs_diagnosis.split(',')
+                # openMRS is inconsistent in the way it returns diagnosis information
+                # This removes all of the assorted words and gives only the diagnosis
+                non_diagnosis_keywords = ['Primary', 'Secondary', 'Confirmed diagnosis', 'Presumed diagnosis']
+                for item in obs_diagnosis:
+                    item = item.strip()
+                    if item not in non_diagnosis_keywords:
+                        obs_diagnosis_str = item
+                        break
+                obs_diagnosis_str = obs_diagnosis_str.strip()
+                obs_dict[obs_diagnosis_str] = Diagnosis(obs_diagnosis_str, date_time)
             return obs_dict
         else:
             for obs in observations:
-                obs_diagnosis = obs.get('display').split(',')[-1]
+                obs_diagnosis_list = obs.get('display').split(':')[1]
+                obs_diagnosis_list = obs_diagnosis_list.split(',')
+                non_diagnosis_keywords = ['Primary', 'Secondary', 'Confirmed diagnosis', 'Presumed diagnosis']
+                for item in obs_diagnosis_list:
+                    item = item.strip()
+                    if item not in non_diagnosis_keywords:
+                        obs_diagnosis = item
+                        break
                 obs_diagnosis = obs_diagnosis.strip()
                 if obs_diagnosis in obs_dict:
                     if obs_dict.get(obs_diagnosis).obs_datetime >= date_time:
