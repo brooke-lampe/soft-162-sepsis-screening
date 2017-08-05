@@ -179,6 +179,7 @@ ScreenManager:
                     on_press:
                         root.transition.direction = 'left'
                         root.current = 'determination'
+                        app.determination(True, True, True)
     Screen:
         name: 'determination'
         BoxLayout:

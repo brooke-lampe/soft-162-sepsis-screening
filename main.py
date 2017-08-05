@@ -168,6 +168,7 @@ class RestApp(App):
         return obs_dict
 
     def determination(self, colony_stimulating_factors, heparin, recombinant_human_erythropoientins):
+        determination_layout = self.root.ids.determination_layout
 
         #Pull required data from the database
         temperature = self.lab_observations.get('Temperature (C)').obs_value
@@ -201,6 +202,8 @@ class RestApp(App):
 
         #Suggested labs are lactate, creatinine, bilirubin, platelets, partial thromboplastin time, blood cultures (3), and urinalysis
         suggested_labs = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        labs_string = ['Lactate', 'Creatinine', 'Bilirubin Total', 'Platelets', 'Partial Thromboplastin Time',
+                       'Blood Cultures, Bacteria', 'Blood Cultures, Fungus', 'Blood Cultures, Viruses', 'Urinalysis']
 
         mean_arterial_pressure = (systolic_blood_pressure + (2 * diastolic_blood_pressure)) / 3
 
@@ -224,7 +227,8 @@ class RestApp(App):
         SIRS_total = SIRS_criteria[0] + SIRS_criteria[1] + SIRS_criteria[2] + SIRS_criteria[3] + SIRS_criteria[4]
 
         if SIRS_total < 2:
-            return 'Continue Monitoring'
+            determination_layout.add_widget(Label(text='Continue Monitoring'))
+            return
 
         #Determine what criteria of organ dysfunction are met (with observations that are sufficiently recent)
         #If observations are not sufficiently recent, suggest labs
@@ -274,17 +278,34 @@ class RestApp(App):
         if organ_dysfunction_total > 0:
             if organ_dysfunction_total == 1 and organ_dysfunction_criteria[2] == 1:
                 if self.diagnose.get('ESRD'):
-                    return 'Continue Monitoring'
+                    determination_layout.add_widget(Label(text='Continue Monitoring'))
+                    return
                 elif recombinant_human_erythropoientins:
-                    return 'Continue Monitoring'
+                    determination_layout.add_widget(Label(text='Continue Monitoring'))
+                    return
                 else:
-                    'Sepsis Alert'
+                    determination_layout.add_widget(Label(text='Sepsis Alert'))
+                    return
             else:
-                'Sepsis Alert'
+                determination_layout.add_widget(Label(text='Sepsis Alert'))
+                return
         elif SIRS_total < 3:
-            return 'Continue Monitoring'
+            determination_layout.add_widget(Label(text='Continue Monitoring'))
+            return
         else:
-            return 'SIRS Alert'
+            #When firing SIRS alert, suggest labs/cultures not found within timeframe in the database
+            determination_layout.add_widget(Label(text='SIRS Alert'))
+            determination_layout.add_widget(Label(text='Suggested Labs:'))
+
+            count = 0
+
+            for i in range(len(suggested_labs)):
+                if suggested_labs[i] == 1:
+                    determination_layout.add_widget(Label(text=labs_string[i]))
+                    count = 1
+
+            if count == 0:
+                determination_layout.add_widget(Label(text='N/A'))
 
 
 if __name__ == "__main__":
