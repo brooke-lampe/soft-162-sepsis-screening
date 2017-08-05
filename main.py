@@ -164,48 +164,113 @@ class RestApp(App):
                     obs_dict[obs_diagnosis] = Diagnosis(obs_diagnosis, date_time)
         return obs_dict
 
-    def determination(self, diagnosis, temperature, heart_rate, respiratory_rate, systolic_blood_pressure, diastolic_blood_pressure,
-                      glucose, leukocytes, blasts_per_100_leukocytes, lactate, creatinine, creatinine_baseline,
-                      bilirubin_total, colony_stimulating_factors, heparin, recombinant_human_erythropoientins):
+    def determination(self, colony_stimulating_factors, heparin, recombinant_human_erythropoientins):
 
+        #Pull required data from the database
+        temperature = self.lab_observations.get('Temperature (C)').obs_value
+        pulse = self.labs_observations.get('Pulse').obs_value
+        respiratory_rate = self.labs_observations.get('Respiratory rate').obs_value
+        systolic_blood_pressure = self.labs_observations.get('Systolic blood pressure').obs_value
+        systolic_blood_pressure_timestamp = self.labs_observations.get('Systolic blood pressure').get_datetime_string
+        diastolic_blood_pressure = self.labs_observations.get('Diastolic blood pressure').obs_value
+        diastolic_blood_pressure_timestamp = self.labs_observations.get('Diastolic blood pressure').get_datetime_string
+        leukocytes = self.labs_observations.get('Leukocytes (#/mL)').obs_value
+        blasts_per_100_leukocytes = self.labs_observations.get('Blasts per 100 Leukocytes').obs_value
+        glucose = self.labs_observations.get('Glucose in Blood (mg/dL)').obs_value
+        lactate = self.labs_observations.get('Lactate in Blood (mmol/L)').obs_value
+        lactate_timestamp = self.labs_observations.get('Lactate in Blood (mmol/L)').get_datetime_string
+        creatinine_difference = self.labs_observations.get_creatinine_change
+        creatinine_timestamp = self.labs_observations.get('Creatinine in Blood (mg/dL)').get_datetime_string
+        bilirubin_total = self.labs_observations.get('Bilirubin Total (mg/dL)').obs_value
+        bilirubin_timestamp = self.labs_observations.get('Bilirubin Total (mg/dL)').get_datetime_string
+        platelets_timestamp = self.labs_observations.get('Platelets (#/mL)').get_datetime_string
+        partial_thromboplastin_time_timestamp = self.labs_observations.get('Parial Thromboplastin Time (s)').get_datetime_string
+        bacteria_culture_timestamp = self.labs_observations.get('Blood Cultures, Bacteria').get_datetime_string
+        fungus_culture_timestamp = self.labs_observations.get('Blood Cultures, Fungus').get_datetime_string
+        virus_culture_timestamp = self.labs_observations.get('Blood Cultures, Viruses').get_datetime_string
+        urinalysis_timestamp = self.labs_observations.get('Urinalysis').get_datetime_string
+
+        #SIRS criteria are temperature, pulse, respiratory rate, glucose, and leukocytes / blasts per 100 leukocytes
         SIRS_criteria = [0, 0, 0, 0, 0]
+
+        #Organ dysfunction criteria are lactate, systolic blood pressure / mean arterial blood pressure, creatinine, and bilirubin
         organ_dysfunction_criteria = [0, 0, 0, 0]
+
+        #Suggested labs are lactate, creatinine, bilirubin, platelets, partial thromboplastin time, blood cultures (3), and urinalysis
+        suggested_labs = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+
         mean_arterial_pressure = (systolic_blood_pressure + (2 * diastolic_blood_pressure)) / 3
 
+        #Determine what criteria of SIRS are met
         if temperature < 36 or temperature > 38.3:
             SIRS_criteria[0] = 1
-        if heart_rate > 95:
+        if pulse > 95:
             SIRS_criteria[1] = 1
         if respiratory_rate >= 21:
             SIRS_criteria[2] = 1
         if glucose >= 140 and glucose < 200:
             SIRS_criteria[3] = 1
-            if diagnosis.find('Diabetes'):
+            if self.diagnose.get('Diabetes Mellitus') or self.diagnose.get('Diabetes Mellitus, Type II'):
                 SIRS_criteria[3] = 0
         if leukocytes > 12000 or leukocytes < 4000 or blasts_per_100_leukocytes > 10:
             SIRS_criteria[4] = 1
             if colony_stimulating_factors:
                 SIRS_criteria[4] = 0
 
+        #Determine the number of SIRS criteria met
         SIRS_total = SIRS_criteria[0] + SIRS_criteria[1] + SIRS_criteria[2] + SIRS_criteria[3] + SIRS_criteria[4]
 
         if SIRS_total < 2:
             return 'Continue Monitoring'
 
-        if lactate > 2:
-            organ_dysfunction_criteria[0] = 1
-        if systolic_blood_pressure < 90 or mean_arterial_pressure < 65:
-            organ_dysfunction_criteria[1] = 1
-        if creatinine - creatinine_baseline > 0.5:
-            organ_dysfunction_criteria[2] = 1
-        if bilirubin_total >= 2 and bilirubin_total < 10:
-            organ_dysfunction_criteria[3] = 1
+        #Determine what criteria of organ dysfunction are met (with observations that are sufficiently recent)
+        #If observations are not sufficiently recent, suggest labs
+        if (datetime.now() - lactate_timestamp) < timedelta(hours = 12):
+            if lactate > 2:
+                organ_dysfunction_criteria[0] = 1
+        else:
+            suggested_labs[0] = 1
 
+        if systolic_blood_pressure < 90 and (datetime.now() - systolic_blood_pressure_timestamp) < timedelta(hours = 30):
+            organ_dysfunction_criteria[1] = 1
+        if mean_arterial_pressure < 65 and (datetime.now() - systolic_blood_pressure_timestamp) < timedelta(hours = 30) and (datetime.now() - diastolic_blood_pressure_timestamp) < timedelta(hours = 30):
+            organ_dysfunction_criteria[1] = 1
+
+        if (datetime.now() - creatinine_timestamp) < timedelta(hours = 30):
+            if creatinine_difference > 0.5:
+                organ_dysfunction_criteria[2] = 1
+        else:
+            suggested_labs[1] = 1
+
+        if (datetime.now() - bilirubin_timestamp) < timedelta(hours = 30):
+            if bilirubin_total >= 2 and bilirubin_total < 10:
+                organ_dysfunction_criteria[3] = 1
+        else:
+            suggested_labs[2] = 1
+
+        #Additional labs to be suggested if labs are not within timeframe
+        if (datetime.now() - platelets_timestamp) < timedelta(hours = 30):
+            suggested_labs[3] = 1
+        if (datetime.now() - partial_thromboplastin_time_timestamp) < timedelta(hours = 30):
+            suggested_labs[4] = 1
+            if heparin:
+                suggested_labs[4] = 0
+        if (datetime.now() - bacteria_culture_timestamp) < timedelta(hours = 30):
+            suggested_labs[5] = 1
+        if (datetime.now() - fungus_culture_timestamp) < timedelta(hours = 30):
+            suggested_labs[6] = 1
+        if (datetime.now() - virus_culture_timestamp) < timedelta(hours = 30):
+            suggested_labs[7] = 1
+        if (datetime.now() - urinalysis_timestamp) < timedelta(hours = 30):
+            suggested_labs[8] = 1
+
+        #Determine the number of organ dysfunction criteria met
         organ_dysfunction_total = organ_dysfunction_criteria[0] + organ_dysfunction_criteria[1] + organ_dysfunction_criteria[2] + organ_dysfunction_criteria[3]
 
+        #Determine if sufficient criteria have been met to diagnose SIRS or sepsis
         if organ_dysfunction_total > 0:
             if organ_dysfunction_total == 1 and organ_dysfunction_criteria[2] == 1:
-                if diagnosis.find('ESRD'):
+                if self.diagnose.get('ESRD'):
                     return 'Continue Monitoring'
                 elif recombinant_human_erythropoientins:
                     return 'Continue Monitoring'
