@@ -79,6 +79,9 @@ class RestApp(App):
                         if 'diagnosis' in observation.get('display'):
                             self.diagnosis_observations = self.populate_diagnosis_dict(encounter, self.diagnosis_observations)
 
+    def on_encounters_not_loaded(self, request, error):
+        Logger.error('RestApp: {error}'.format(error=error))
+
     def populate_observation_dict(self, obs_type, encounter, obs_dict, visit_uuid):
             # create datetime object based on encounter time so we can easily compare them
             date_time_temp = encounter.get('encounterDatetime').split('.')[0]
@@ -282,72 +285,6 @@ class RestApp(App):
             return 'Continue Monitoring'
         else:
             return 'SIRS Alert'
-
-    #This function no longer shows data on the GUI, which has been prepped for the medication information.
-    #Instead, it prints information to the standard output.
-    #If we don't need this function, we can delete it.
-
-    #This function shows recent diagnosese for a patient
-    def display_diagnosis(self, data):
-        timestamp = 'N/A'
-        diagnosis_array = []
-
-        for i in range(len(data)):
-            if data[i].find('Visit Diagnoses:') != -1:
-                timestamp = data[i + 1]
-                diagnosis_array.append(data[i])
-                diagnosis_array.append(data[i + 1])
-
-        print('Diagnosis')
-
-        for j in range(len(diagnosis_array)):
-            if diagnosis_array[j] == timestamp:
-                print(diagnosis_array[j - 1])
-                print(timestamp)
-
-    #This function no longer shows data on the GUI, which has been prepped for the medication information.
-    #Instead, it prints information to the standard output.
-    #If we don't need this function, we can delete it.
-
-    #This function shows the recent observations of a patient's vitals
-    def display_vitals(self, data):
-        vitals = ['Height (cm):', 'Weight (kg):', 'Temperature (C):', 'Pulse:', 'Respiratory rate:', 'Systolic blood pressure:', 'Diastolic blood pressure:', 'Blood oxygen saturation:']
-        recent = 'N/A'
-        timestamp = 'N/A'
-
-        print('Vitals')
-
-        for vital in vitals:
-            for i in range(len(data)):
-                if data[i].find(vital) != -1:
-                    recent = data[i]
-                    timestamp = data[i + 1]
-            print(recent)
-            print(timestamp)
-
-    #This function no longer shows data on the GUI, which has been prepped for the medication information.
-    #Instead, it prints information to the standard output.
-    #If we don't need this function, we can delete it.
-
-    #This function shows a patient's recent lab results
-    def display_labs(self, data):
-        labs = ['Leukocytes (#/mL)', 'Blasts per 100 Leukocytes', 'Platelets', 'Partial Thromboplastin Time', 'Glucose', 'Lactate', 'Creatinine',
-                'Bilirubin Direct', 'Bilirubin Total', 'Blood Cultures, Bacteria', 'Blood Cultures, Fungus', 'Blood Cultures, Viruses', 'Urinalysis']
-        recent = 'N/A'
-        timestamp = 'N/A'
-
-        print('Labs')
-
-        for lab in labs:
-            for i in range(len(data)):
-                if data[i].find(lab) != -1:
-                    recent = data[i]
-                    timestamp = data[i + 1]
-            print(recent)
-            print(timestamp)
-
-    def on_encounters_not_loaded(self, request, error):
-        Logger.error('RestApp: {error}'.format(error=error))
 
 
 if __name__ == "__main__":
