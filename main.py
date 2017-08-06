@@ -19,6 +19,24 @@ class RestApp(App):
 
     def __init__(self, **kwargs):
         super(RestApp, self).__init__(**kwargs)
+        self.vitals_observations = {'Temperature (C)': Observation('Vitals', 'Temperature (C)', 0, 0),
+                                    'Pulse': Observation('Vitals', 'Pulse', 0, 0),
+                                    'Respiratory rate': Observation('Vitals', 'Respiratory rate', 0, 0),
+                                    'Systolic blood pressure': Observation('Vitals', 'Systolic blood pressure', 0, 0),
+                                    'Diastolic blood pressure': Observation('Vitals', 'Diastolic blood pressure', 0, 0)}
+
+        self.lab_observations = {'Leukocytes (#/mL)': Observation('Labs', 'Leukocytes (#/mL)', 0, 0),
+                                        'Blasts per 100 Leukocytes (%)': Observation('Labs', 'Blasts per 100 Leukocytes (%)', 0, 0),
+                                        'Glucose in Blood (mg/dL)': Observation('Labs', 'Glucose in Blood (mg/dL)', 0, 0),
+                                        'Lactate in Blood (mmol/L)': Observation('Labs', 'Lactate in Blood (mmol/L)', 0, 0),
+                                        'Creatinine in Blood (mg/dL)': Creatinine('Labs', 'Creatinine in Blood (mg/dL)', 0, 0, 0, 0) ,
+                                        'Bilirubin Total (mg/dL)': Observation('Labs', 'Bilirubin Total (mg/dL)', 0, 0),
+                                        'Platelets (#/mL)': Observation('Labs', 'Platelets (#/mL)', 0, 0),
+                                        'Partial Thromboplastin Time (s)': Observation('Labs', 'Partial Thromboplastin Time (s)', 0, 0),
+                                        'Blood Cultures, Viruses': Observation('Labs', 'Blood Cultures, Viruses', 0, 0),
+                                        'Blood Cultures, Bacteria': Observation('Labs', 'Blood Cultures, Bacteria', 0, 0),
+                                        'Blood Cultures, Fungus': Observation('Labs', 'Blood Cultures, Fungus', 0, 0),
+                                        'Urinalysis': Observation('Labs', 'Urinalysis', 0, 0)}
 
     def connect(self):
         self.openmrs_connection = RESTConnection(self.root.ids.authority.text, self.root.ids.port_number.text, self.root.ids.username.text, self.root.ids.password.text)
@@ -83,6 +101,8 @@ class RestApp(App):
                     for observation in encounter.get('obs'):
                         if 'diagnosis' in observation.get('display'):
                             self.diagnosis_observations = self.populate_diagnosis_dict(encounter, self.diagnosis_observations)
+        for item in self.vitals_observations:
+            print (self.vitals_observations.get(item))
 
     def on_encounters_not_loaded(self, request, error):
         Logger.error('RestApp: {error}'.format(error=error))
@@ -115,16 +135,23 @@ class RestApp(App):
                         # if a second creatinine value is found under the same visit update the baseline
                         if obs_string == 'Creatinine in Blood (mg/dL)':
                             creat = obs_dict.get('Creatinine in Blood (mg/dL)')
+                            if creat.visit_id == 0:
+                                obs_dict[obs_string] = Creatinine('Labs', obs_string, obs_value, obs_value, date_time, visit_uuid)
                             if creat.visit_id == visit_uuid:
                                 creat.update_baseline(obs_value)
                                 obs_dict[obs_string] = creat
                                 continue
+
+                        # if its a blank entry set the object
+                        if obs_dict.get(obs_string).obs_datetime == 0:
+                            obs_dict[obs_string] = obs_object
+
                         # if data entry is older than what is currently in the dictionary continue
                         if obs_dict.get(obs_string).obs_datetime >= date_time:
                             continue
                         # if the data entry is newer update the dictionary
                         elif obs_dict.get(obs_string).obs_datetime < date_time:
-                            obs_dict.update(obs_string, obs_object)
+                            obs_dict[obs_string] = obs_object
                             continue
                     # if observation is not found in the dict add it
                     else:
