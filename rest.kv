@@ -180,7 +180,7 @@ ScreenManager:
                     on_press:
                         root.transition.direction = 'left'
                         root.current = 'determination'
-                        app.determination(True, True, True)
+                        app.retrieve()
     Screen:
         name: 'determination'
         ScrollView:
@@ -200,12 +200,12 @@ ScreenManager:
                 Label:
                     id: patient_info
                     text: ''
-                    font_size: '22sp'
+                    font_size: '20sp'
                     color: (0.6, 0.1, 0.9)
                 Label:
                     id: determination_timestamp
                     text: ''
-                    font_size: '22sp'
+                    font_size: '20sp'
                     color: (0.6, 0.1, 0.9)
                 BoxLayout:
                     orientation: 'vertical'

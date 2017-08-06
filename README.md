@@ -10,5 +10,4 @@ should be run.
 
 Contains:  main.py, observations.py, openmrs.py, rest.kv, testing (system_test_frames, system_tests)
 
-Project Status:  Incomplete (medications database and methods missing), determination method experiencing errors
-('Nonetype' object has no attribute 'obs_value'
+Project Status:  Incomplete (medications database and methods missing)

@@ -173,9 +173,49 @@ class RestApp(App):
         return obs_dict
 
     def retrieve(self):
-        pass
+        #Pull required data from the database
 
-    def determination(self, colony_stimulating_factors, heparin, recombinant_human_erythropoientins):
+        #Diagnosis Observations
+        diabetes_i = self.diagnosis_observations.get('Diabetes Mellitus')
+        diabetes_ii = self.diagnosis_observations.get('Diabetes Mellitus, Type II')
+        ESRD = self.diagnosis_observations.get('ESRD')
+
+        #Vitals Observations
+        temperature = self.vitals_observations.get('Temperature (C)')
+        pulse = self.vitals_observations.get('Pulse')
+        respiratory_rate = self.vitals_observations.get('Respiratory rate')
+        systolic_blood_pressure = self.vitals_observations.get('Systolic blood pressure')
+        diastolic_blood_pressure = self.vitals_observations.get('Diastolic blood pressure')
+
+        #Labs Observations
+        leukocytes = self.lab_observations.get('Leukocytes (#/mL)')
+        blasts_per_100_leukocytes = self.lab_observations.get('Blasts per 100 Leukocytes (%)')
+        glucose = self.lab_observations.get('Glucose in Blood (mg/dL)')
+        lactate = self.lab_observations.get('Lactate in Blood (mmol/L)')
+        creatinine = self.lab_observations.get('Creatinine in Blood (mg/dL)')
+        bilirubin_total = self.lab_observations.get('Bilirubin Total (mg/dL)')
+
+        #Timestamp only
+        platelets_timestamp = self.lab_observations.get('Platelets (#/mL)').obs_datetime
+        partial_thromboplastin_time_timestamp = self.lab_observations.get('Partial Thromboplastin Time (s)').obs_datetime
+        bacteria_culture_timestamp = self.lab_observations.get('Blood Cultures, Bacteria').obs_datetime
+        fungus_culture_timestamp = self.lab_observations.get('Blood Cultures, Fungus').obs_datetime
+        virus_culture_timestamp = self.lab_observations.get('Blood Cultures, Viruses').obs_datetime
+        urinalysis_timestamp = self.lab_observations.get('Urinalysis').obs_datetime
+
+        colony_stimulating_factors = True
+        heparin = True
+        recombinant_human_erythropoientins = True
+
+        self.determination(diabetes_i, diabetes_ii, ESRD, temperature, pulse, respiratory_rate, systolic_blood_pressure, diastolic_blood_pressure,
+                      leukocytes, blasts_per_100_leukocytes, glucose, lactate, creatinine, bilirubin_total,
+                      platelets_timestamp, partial_thromboplastin_time_timestamp, bacteria_culture_timestamp, fungus_culture_timestamp, virus_culture_timestamp,
+                      urinalysis_timestamp, colony_stimulating_factors, heparin, recombinant_human_erythropoientins)
+
+    def determination(self, diabetes_i, diabetes_ii, ESRD, temperature, pulse, respiratory_rate, systolic_blood_pressure, diastolic_blood_pressure,
+                      leukocytes, blasts_per_100_leukocytes, glucose, lactate, creatinine, bilirubin_total,
+                      platelets_timestamp, partial_thromboplastin_time_timestamp, bacteria_culture_timestamp, fungus_culture_timestamp, virus_culture_timestamp,
+                      urinalysis_timestamp, colony_stimulating_factors, heparin, recombinant_human_erythropoientins):
 
         #Fill in user interface information
         determination_layout = self.root.ids.determination_layout
@@ -185,36 +225,6 @@ class RestApp(App):
         date_object = datetime.now()
         current_time = date_object.strftime('%Y-%m-%d@%H:%M:%S')
         self.root.ids.determination_timestamp = current_time
-
-        #Pull required data from the database
-
-        #Vitals Observations
-        temperature = float(self.vitals_observations.get('Temperature (C)').obs_value)
-        pulse = float(self.vitals_observations.get('Pulse').obs_value)
-        respiratory_rate = float(self.vitals_observations.get('Respiratory rate').obs_value)
-        systolic_blood_pressure = float(self.vitals_observations.get('Systolic blood pressure').obs_value)
-        systolic_blood_pressure_timestamp = self.vitals_observations.get('Systolic blood pressure').obs_datetime
-        diastolic_blood_pressure = float(self.vitals_observations.get('Diastolic blood pressure').obs_value)
-        diastolic_blood_pressure_timestamp = self.vitals_observations.get('Diastolic blood pressure').obs_datetime
-
-        #Labs Observations
-        leukocytes = float(self.lab_observations.get('Leukocytes (#/mL)').obs_value)
-        blasts_per_100_leukocytes = float(self.lab_observations.get('Blasts per 100 Leukocytes (%)').obs_value)
-        glucose = float(self.lab_observations.get('Glucose in Blood (mg/dL)').obs_value)
-        lactate = float(self.lab_observations.get('Lactate in Blood (mmol/L)').obs_value)
-        lactate_timestamp = self.lab_observations.get('Lactate in Blood (mmol/L)').obs_datetime
-        #creatinine_difference = float(self.lab_observations.get_creatinine_change)
-        creatinine_difference = 0.25
-        #creatinine_timestamp = self.lab_observations.get('Creatinine in Blood (mg/dL)').obs_datetime
-        creatinine_timestamp = lactate_timestamp
-        bilirubin_total = float(self.lab_observations.get('Bilirubin Total (mg/dL)').obs_value)
-        bilirubin_timestamp = self.lab_observations.get('Bilirubin Total (mg/dL)').obs_datetime
-        platelets_timestamp = self.lab_observations.get('Platelets (#/mL)').obs_datetime
-        partial_thromboplastin_time_timestamp = self.lab_observations.get('Partial Thromboplastin Time (s)').obs_datetime
-        bacteria_culture_timestamp = self.lab_observations.get('Blood Cultures, Bacteria').obs_datetime
-        fungus_culture_timestamp = self.lab_observations.get('Blood Cultures, Fungus').obs_datetime
-        virus_culture_timestamp = self.lab_observations.get('Blood Cultures, Viruses').obs_datetime
-        urinalysis_timestamp = self.lab_observations.get('Urinalysis').obs_datetime
 
         #SIRS criteria are temperature, pulse, respiratory rate, glucose, and leukocytes / blasts per 100 leukocytes
         SIRS_criteria = [0, 0, 0, 0, 0]
@@ -227,20 +237,20 @@ class RestApp(App):
         labs_string = ['Lactate', 'Creatinine', 'Bilirubin Total', 'Platelets', 'Partial Thromboplastin Time',
                        'Blood Cultures, Bacteria', 'Blood Cultures, Fungus', 'Blood Cultures, Viruses', 'Urinalysis']
 
-        mean_arterial_pressure = (systolic_blood_pressure + (2 * diastolic_blood_pressure)) / 3
+        mean_arterial_pressure = (float(systolic_blood_pressure.obs_value) + (2 * float(diastolic_blood_pressure.obs_value))) / 3
 
         #Determine what criteria of SIRS are met
-        if temperature < 36 or temperature > 38.3:
+        if float(temperature.obs_value) < 36 or float(temperature.obs_value) > 38.3:
             SIRS_criteria[0] = 1
-        if pulse > 95:
+        if float(pulse.obs_value) > 95:
             SIRS_criteria[1] = 1
-        if respiratory_rate >= 21:
+        if float(respiratory_rate.obs_value) >= 21:
             SIRS_criteria[2] = 1
-        if glucose >= 140 and glucose < 200:
+        if float(glucose.obs_value) >= 140 and float(glucose.obs_value) < 200:
             SIRS_criteria[3] = 1
-            if self.diagnose.get('Diabetes Mellitus') or self.diagnose.get('Diabetes Mellitus, Type II'):
+            if diabetes_i or diabetes_ii:
                 SIRS_criteria[3] = 0
-        if leukocytes > 12000 or leukocytes < 4000 or blasts_per_100_leukocytes > 10:
+        if float(leukocytes.obs_value) > 12000 or float(leukocytes.obs_value) < 4000 or float(blasts_per_100_leukocytes.obs_value) > 10:
             SIRS_criteria[4] = 1
             if colony_stimulating_factors:
                 SIRS_criteria[4] = 0
@@ -250,25 +260,25 @@ class RestApp(App):
 
         #Determine what criteria of organ dysfunction are met (with observations that are sufficiently recent)
         #If observations are not sufficiently recent, suggest labs
-        if (date_object - lactate_timestamp) < timedelta(hours = 12):
-            if lactate > 2:
+        if (date_object - lactate.obs_datetime) < timedelta(hours = 12):
+            if float(lactate.obs_value) > 2:
                 organ_dysfunction_criteria[0] = 1
         else:
             suggested_labs[0] = 1
 
-        if systolic_blood_pressure < 90 and (date_object - systolic_blood_pressure_timestamp) < timedelta(hours = 30):
+        if float(systolic_blood_pressure.obs_value) < 90 and (date_object - systolic_blood_pressure.obs_datetime) < timedelta(hours = 30):
             organ_dysfunction_criteria[1] = 1
-        if mean_arterial_pressure < 65 and (date_object - systolic_blood_pressure_timestamp) < timedelta(hours = 30) and (date_object - diastolic_blood_pressure_timestamp) < timedelta(hours = 30):
+        if mean_arterial_pressure < 65 and (date_object - systolic_blood_pressure.obs_datetime) < timedelta(hours = 30) and (date_object - diastolic_blood_pressure.obs_datetime) < timedelta(hours = 30):
             organ_dysfunction_criteria[1] = 1
 
-        if (date_object - creatinine_timestamp) < timedelta(hours = 30):
-            if creatinine_difference > 0.5:
+        if (date_object - creatinine.obs_datetime) < timedelta(hours = 30):
+            if creatinine.get_creatinine_change() > 0.5:
                 organ_dysfunction_criteria[2] = 1
         else:
             suggested_labs[1] = 1
 
-        if (date_object - bilirubin_timestamp) < timedelta(hours = 30):
-            if bilirubin_total >= 2 and bilirubin_total < 10:
+        if (date_object - bilirubin_total.obs_datetime) < timedelta(hours = 30):
+            if float(bilirubin_total.obs_value) >= 2 and float(bilirubin_total.obs_value) < 10:
                 organ_dysfunction_criteria[3] = 1
         else:
             suggested_labs[2] = 1
@@ -297,7 +307,7 @@ class RestApp(App):
             determination_layout.add_widget(Label(text='Indeterminate'))
         elif organ_dysfunction_total > 0:
             if organ_dysfunction_total == 1 and organ_dysfunction_criteria[2] == 1:
-                if self.diagnose.get('ESRD'):
+                if ESRD:
                     determination_layout.add_widget(Label(text='Indeterminate'))
                 elif recombinant_human_erythropoientins:
                     determination_layout.add_widget(Label(text='Indeterminate'))
