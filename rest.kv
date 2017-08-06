@@ -188,47 +188,97 @@ ScreenManager:
             BoxLayout:
                 orientation: 'vertical'
                 size_hint: 1, None
-                height: 1000
+                height: 1150
                 Label:
                     text: 'OpenMRS Patient Information App'
                     font_size: '30sp'
                     color: (0.6, 0.1, 0.9)
+                    size_hint: 1, None
+                    height: 75
                 Label:
                     text: 'Determination Screen'
                     font_size: '24sp'
                     color: (1, 0, 0)
+                    size_hint: 1, None
+                    height: 50
                 Label:
                     id: patient_info
-                    text: ''
                     font_size: '20sp'
                     color: (0.6, 0.1, 0.9)
+                    size_hint: 1, None
+                    height: 25
                 Label:
                     id: determination_timestamp
-                    text: ''
                     font_size: '20sp'
                     color: (0.6, 0.1, 0.9)
-                BoxLayout:
-                    orientation: 'vertical'
-                    id: determination_layout
+                    size_hint: 1, None
+                    height: 25
+                Label:
+                    id: determination_summary
+                    font_size: '30sp'
+                    color: (0.99, 0.3, 0)
+                    size_hint: 1, None
+                    height: 75
                 Label:
                     text: 'SIRS Criteria Met'
                     font_size: '20sp'
                     color: (1, 0, 0)
+                    size_hint: 1, None
+                    height: 40
                 BoxLayout:
-                    orientation: 'vertical'
-                    id: SIRS_criteria
+                    orientation: 'horizontal'
+                    size_hint: 1, None
+                    height: 200
+                    BoxLayout:
+                        orientation: 'vertical'
+                        id: SIRS_criteria
+                    BoxLayout:
+                        orientation: 'vertical'
+                        id: SIRS_reason
                 Label:
                     text: 'Organ Dysfunction Criteria Met'
                     font_size: '20sp'
                     color: (1, 0, 0)
-                BoxLayout:
-                    orientation: 'vertical'
-                    id: organ_criteria
+                    size_hint: 1, None
+                    height: 40
                 BoxLayout:
                     orientation: 'horizontal'
+                    size_hint: 1, None
+                    height: 200
                     BoxLayout:
                         orientation: 'vertical'
+                        id: organ_criteria
+                    BoxLayout:
+                        orientation: 'vertical'
+                        id: organ_reason
+                Label:
+                    id: treatment
+                    font_size: '30sp'
+                    color: (0.99, 0.3, 0)
+                    size_hint: 1, None
+                    height: 50
+                Label:
+                    text: 'Suggested Labs:'
+                    font_size: '20sp'
+                    color: (1, 0, 0)
+                    size_hint: 1, None
+                    height: 40
+                BoxLayout:
+                    orientation: 'vertical'
+                    id: suggested_layout
+                    size_hint: 1, None
+                    height: 200
+                BoxLayout:
+                    orientation: 'horizontal'
+                    size_hint: 1, None
+                    height: 100
+                    BoxLayout:
+                        orientation: 'vertical'
+                        size_hint: 1, None
+                        height: 50
                         Button:
+                            size_hint: 1, None
+                            height: 50
                             text: 'Log Out'
                             on_press:
                                 root.ids.password.text = ''
@@ -240,15 +290,22 @@ ScreenManager:
                                 root.transition.direction = 'right'
                                 root.current = 'log_in'
                                 app.connect()
+                                app.clear()
                         Button:
+                            size_hint: 1, None
+                            height: 50
                             text: 'Return to Patient Selection Screen'
                             on_press:
                                 root.ids.retrieve.text = ''
                                 root.ids.retrieve2.text = ''
                                 root.transition.direction = 'right'
                                 root.current = 'selection'
+                                app.clear()
                     Button:
+                        size_hint: 1, None
+                        height: 100
                         text: 'Return to Medications Screen'
                         on_press:
                             root.transition.direction = 'right'
                             root.current = 'medication'
+                            app.clear()

@@ -15,7 +15,7 @@ class RestApp(App):
     vitals_observations = {}
     diagnosis_observations = {}
     global patient_info
-    patient_info = 'null'
+    patient_info = 'Patient has no data.'
 
     def __init__(self, **kwargs):
         super(RestApp, self).__init__(**kwargs)
@@ -203,7 +203,7 @@ class RestApp(App):
         virus_culture_timestamp = self.lab_observations.get('Blood Cultures, Viruses').obs_datetime
         urinalysis_timestamp = self.lab_observations.get('Urinalysis').obs_datetime
 
-        colony_stimulating_factors = True
+        colony_stimulating_factors = False
         heparin = True
         recombinant_human_erythropoientins = True
 
@@ -218,13 +218,20 @@ class RestApp(App):
                       urinalysis_timestamp, colony_stimulating_factors, heparin, recombinant_human_erythropoientins):
 
         #Fill in user interface information
-        determination_layout = self.root.ids.determination_layout
+        suggested_layout = self.root.ids.suggested_layout
+        SIRS_criteria_layout = self.root.ids.SIRS_criteria
+        SIRS_reason_layout = self.root.ids.SIRS_reason
+        organ_criteria_layout = self.root.ids.organ_criteria
+        organ_reason_layout = self.root.ids.organ_reason
 
-        self.root.ids.patient_info = patient_info
+        self.root.ids.patient_info.text = patient_info
 
         date_object = datetime.now()
         current_time = date_object.strftime('%Y-%m-%d@%H:%M:%S')
-        self.root.ids.determination_timestamp = current_time
+        self.root.ids.determination_timestamp.text = current_time
+
+        #Classifications are '0' for indeterminate, '1' for SIRS, and '2' for sepsis (default is '0')
+        classification = 0
 
         #SIRS criteria are temperature, pulse, respiratory rate, glucose, and leukocytes / blasts per 100 leukocytes
         SIRS_criteria = [0, 0, 0, 0, 0]
@@ -240,20 +247,46 @@ class RestApp(App):
         mean_arterial_pressure = (float(systolic_blood_pressure.obs_value) + (2 * float(diastolic_blood_pressure.obs_value))) / 3
 
         #Determine what criteria of SIRS are met
-        if float(temperature.obs_value) < 36 or float(temperature.obs_value) > 38.3:
+        if float(temperature.obs_value) < 36:
             SIRS_criteria[0] = 1
+            SIRS_criteria_layout.add_widget(Label(text=str(temperature)))
+            SIRS_reason_layout.add_widget(Label(text='Below 36'))
+        elif float(temperature.obs_value) > 38.3:
+            SIRS_criteria[0] = 1
+            SIRS_criteria_layout.add_widget(Label(text=str(temperature)))
+            SIRS_reason_layout.add_widget(Label(text='Above 38.3'))
+
         if float(pulse.obs_value) > 95:
             SIRS_criteria[1] = 1
+            SIRS_criteria_layout.add_widget(Label(text=str(pulse)))
+            SIRS_reason_layout.add_widget(Label(text='Above 95'))
+
         if float(respiratory_rate.obs_value) >= 21:
             SIRS_criteria[2] = 1
-        if float(glucose.obs_value) >= 140 and float(glucose.obs_value) < 200:
+            SIRS_criteria_layout.add_widget(Label(text=str(respiratory_rate)))
+            SIRS_reason_layout.add_widget(Label(text='Above 21'))
+
+        if diabetes_i or diabetes_ii:
+            pass
+        elif 140 <= float(glucose.obs_value) < 200:
             SIRS_criteria[3] = 1
-            if diabetes_i or diabetes_ii:
-                SIRS_criteria[3] = 0
-        if float(leukocytes.obs_value) > 12000 or float(leukocytes.obs_value) < 4000 or float(blasts_per_100_leukocytes.obs_value) > 10:
+            SIRS_criteria_layout.add_widget(Label(text=str(glucose)))
+            SIRS_reason_layout.add_widget(Label(text='Between 140 and 200'))
+
+        if colony_stimulating_factors:
+            pass
+        elif float(leukocytes.obs_value) > 12000:
             SIRS_criteria[4] = 1
-            if colony_stimulating_factors:
-                SIRS_criteria[4] = 0
+            SIRS_criteria_layout.add_widget(Label(text=str(leukocytes)))
+            SIRS_reason_layout.add_widget(Label(text='Above 12000'))
+        elif float(leukocytes.obs_value) < 4000:
+            SIRS_criteria[4] = 1
+            SIRS_criteria_layout.add_widget(Label(text=str(leukocytes)))
+            SIRS_reason_layout.add_widget(Label(text='Below 4000'))
+        elif float(blasts_per_100_leukocytes.obs_value) > 10:
+            SIRS_criteria[4] = 1
+            SIRS_criteria_layout.add_widget(Label(text=str(blasts_per_100_leukocytes)))
+            SIRS_reason_layout.add_widget(Label(text='Above 10'))
 
         #Determine the number of SIRS criteria met
         SIRS_total = SIRS_criteria[0] + SIRS_criteria[1] + SIRS_criteria[2] + SIRS_criteria[3] + SIRS_criteria[4]
@@ -263,23 +296,35 @@ class RestApp(App):
         if (date_object - lactate.obs_datetime) < timedelta(hours = 12):
             if float(lactate.obs_value) > 2:
                 organ_dysfunction_criteria[0] = 1
+                organ_criteria_layout.add_widget(Label(text=str(lactate)))
+                organ_reason_layout.add_widget(Label(text='Above 2'))
         else:
             suggested_labs[0] = 1
 
         if float(systolic_blood_pressure.obs_value) < 90 and (date_object - systolic_blood_pressure.obs_datetime) < timedelta(hours = 30):
             organ_dysfunction_criteria[1] = 1
-        if mean_arterial_pressure < 65 and (date_object - systolic_blood_pressure.obs_datetime) < timedelta(hours = 30) and (date_object - diastolic_blood_pressure.obs_datetime) < timedelta(hours = 30):
+            organ_criteria_layout.add_widget(Label(text=str(systolic_blood_pressure)))
+            organ_reason_layout.add_widget(Label(text='Below 90'))
+        elif mean_arterial_pressure < 65 and (date_object - systolic_blood_pressure.obs_datetime) < timedelta(hours = 30) and (date_object - diastolic_blood_pressure.obs_datetime) < timedelta(hours = 30):
             organ_dysfunction_criteria[1] = 1
+            organ_criteria_layout.add_widget(Label(text=str(systolic_blood_pressure)))
+            organ_criteria_layout.add_widget(Label(text=str(diastolic_blood_pressure)))
+            organ_reason_layout.add_widget(Label(text='Mean Arterial Pressure'))
+            organ_reason_layout.add_widget(Label(text='is below 65'))
 
         if (date_object - creatinine.obs_datetime) < timedelta(hours = 30):
             if creatinine.get_creatinine_change() > 0.5:
                 organ_dysfunction_criteria[2] = 1
+                organ_criteria_layout.add_widget(Label(text=str(creatinine)))
+                organ_reason_layout.add_widget(Label(text='Above 0.5 difference from baseline'))
         else:
             suggested_labs[1] = 1
 
         if (date_object - bilirubin_total.obs_datetime) < timedelta(hours = 30):
-            if float(bilirubin_total.obs_value) >= 2 and float(bilirubin_total.obs_value) < 10:
+            if 2 <= float(bilirubin_total.obs_value) < 10:
                 organ_dysfunction_criteria[3] = 1
+                organ_criteria_layout.add_widget(Label(text=str(bilirubin_total)))
+                organ_reason_layout.add_widget(Label(text='Between 2 and 10'))
         else:
             suggested_labs[2] = 1
 
@@ -304,33 +349,61 @@ class RestApp(App):
 
         #Determine if sufficient criteria have been met to diagnose SIRS or sepsis
         if SIRS_total < 2:
-            determination_layout.add_widget(Label(text='Indeterminate'))
+            classification = 0
         elif organ_dysfunction_total > 0:
             if organ_dysfunction_total == 1 and organ_dysfunction_criteria[2] == 1:
                 if ESRD:
-                    determination_layout.add_widget(Label(text='Indeterminate'))
+                    classification = 0
                 elif recombinant_human_erythropoientins:
-                    determination_layout.add_widget(Label(text='Indeterminate'))
+                    classification = 0
                 else:
-                    determination_layout.add_widget(Label(text='Sepsis Likely'))
+                    classification = 2
+
             else:
-                determination_layout.add_widget(Label(text='Sepsis Likely'))
+                classification = 2
         elif SIRS_total < 3:
-            determination_layout.add_widget(Label(text='Indeterminate'))
+            classification = 0
         else:
-            #When firing SIRS alert, suggest labs/cultures not found within timeframe in the database
-            determination_layout.add_widget(Label(text='SIRS Likely'))
-            determination_layout.add_widget(Label(text='Suggested Labs:'))
+            classification = 1
 
-            count = 0
+        #Show determination summary, next steps, and suggested labs to the user
+        # (Note: evidence, which appears beneath determination summary, is added to the user interface in above code)
 
-            for i in range(len(suggested_labs)):
-                if suggested_labs[i] == 1:
-                    determination_layout.add_widget(Label(text=labs_string[i]))
-                    count = 1
+        #Determination summary and next steps
+        if classification == 0:
+            self.root.ids.determination_summary.text = 'Indeterminate'
+            self.root.ids.treatment.text = 'No treatment at this time'
+        elif classification == 1:
+            self.root.ids.determination_summary.text = 'SIRS Likely'
+            self.root.ids.treatment.text = 'Treat patient for SIRS'
+        elif classification == 2:
+            self.root.ids.determination_summary.text = 'Sepsis Likely'
+            self.root.ids.treatment.text = 'Treat patient for Sepsis'
 
-            if count == 0:
-                determination_layout.add_widget(Label(text='N/A'))
+        #Suggested labs
+        count = 0
+        for i in range(len(suggested_labs)):
+            if suggested_labs[i] == 1:
+                suggested_layout.add_widget(Label(text=labs_string[i]))
+                count = 1
+        if count == 0:
+            suggested_layout.add_widget(Label(text='N/A'))
+
+    def clear(self):
+        self.lab_observations.clear()
+        self.vitals_observations.clear()
+        self.diagnosis_observations.clear()
+        global patient_info
+        patient_info = 'Patient has no data.'
+        self.root.ids.patient_info.text = ''
+        self.root.ids.determination_timestamp.text = ''
+        self.root.ids.determination_summary.text = ''
+        self.root.ids.SIRS_criteria.clear_widgets()
+        self.root.ids.SIRS_reason.clear_widgets()
+        self.root.ids.organ_criteria.clear_widgets()
+        self.root.ids.organ_reason.clear_widgets()
+        self.root.ids.treatment.text = ''
+        self.root.ids.suggested_layout.clear_widgets()
 
 
 if __name__ == "__main__":
