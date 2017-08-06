@@ -10,4 +10,4 @@ should be run.
 
 Contains:  main.py, observations.py, openmrs.py, rest.kv, testing (system_test_frames, system_tests)
 
-Project Status:  Incomplete (medications database and methods missing)
+Project Status:  Incomplete (medications database and methods missing), no known bugs or errors
