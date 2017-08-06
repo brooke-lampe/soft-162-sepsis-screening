@@ -373,20 +373,23 @@ class RestApp(App):
         if classification == 0:
             self.root.ids.determination_summary.text = 'Indeterminate'
             self.root.ids.treatment.text = 'No treatment at this time'
+            suggested_layout.add_widget(Label(text='N/A'))
         elif classification == 1:
             self.root.ids.determination_summary.text = 'SIRS Likely'
             self.root.ids.treatment.text = 'Treat patient for SIRS'
+
+            #Suggested labs
+            count = 0
+            for i in range(len(suggested_labs)):
+                if suggested_labs[i] == 1:
+                    suggested_layout.add_widget(Label(text=labs_string[i]))
+                    count = 1
+            if count == 0:
+                suggested_layout.add_widget(Label(text='N/A'))
+
         elif classification == 2:
             self.root.ids.determination_summary.text = 'Sepsis Likely'
             self.root.ids.treatment.text = 'Treat patient for Sepsis'
-
-        #Suggested labs
-        count = 0
-        for i in range(len(suggested_labs)):
-            if suggested_labs[i] == 1:
-                suggested_layout.add_widget(Label(text=labs_string[i]))
-                count = 1
-        if count == 0:
             suggested_layout.add_widget(Label(text='N/A'))
 
     def clear(self):
