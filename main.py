@@ -101,8 +101,6 @@ class RestApp(App):
                     for observation in encounter.get('obs'):
                         if 'diagnosis' in observation.get('display'):
                             self.diagnosis_observations = self.populate_diagnosis_dict(encounter, self.diagnosis_observations)
-        for item in self.vitals_observations:
-            print (self.vitals_observations.get(item))
 
     def on_encounters_not_loaded(self, request, error):
         Logger.error('RestApp: {error}'.format(error=error))
@@ -231,8 +229,8 @@ class RestApp(App):
         urinalysis_timestamp = self.lab_observations.get('Urinalysis').obs_datetime
 
         colony_stimulating_factors = False
-        heparin = True
-        recombinant_human_erythropoientins = True
+        heparin = False
+        recombinant_human_erythropoientins = False
 
         self.determination(diabetes_i, diabetes_ii, ESRD, temperature, pulse, respiratory_rate, systolic_blood_pressure, diastolic_blood_pressure,
                       leukocytes, blasts_per_100_leukocytes, glucose, lactate, creatinine, bilirubin_total,
@@ -274,43 +272,43 @@ class RestApp(App):
         mean_arterial_pressure = (float(systolic_blood_pressure.obs_value) + (2 * float(diastolic_blood_pressure.obs_value))) / 3
 
         #Determine what criteria of SIRS are met
-        if float(temperature.obs_value) < 36:
+        if temperature.obs_datetime != 0 and float(temperature.obs_value) < 36:
             SIRS_criteria[0] = 1
             SIRS_criteria_layout.add_widget(Label(text=str(temperature)))
             SIRS_reason_layout.add_widget(Label(text='Below 36'))
-        elif float(temperature.obs_value) > 38.3:
+        elif temperature.obs_datetime != 0 and float(temperature.obs_value) > 38.3:
             SIRS_criteria[0] = 1
             SIRS_criteria_layout.add_widget(Label(text=str(temperature)))
             SIRS_reason_layout.add_widget(Label(text='Above 38.3'))
 
-        if float(pulse.obs_value) > 95:
+        if pulse.obs_datetime != 0 and float(pulse.obs_value) > 95:
             SIRS_criteria[1] = 1
             SIRS_criteria_layout.add_widget(Label(text=str(pulse)))
             SIRS_reason_layout.add_widget(Label(text='Above 95'))
 
-        if float(respiratory_rate.obs_value) >= 21:
+        if respiratory_rate.obs_datetime != 0 and float(respiratory_rate.obs_value) >= 21:
             SIRS_criteria[2] = 1
             SIRS_criteria_layout.add_widget(Label(text=str(respiratory_rate)))
             SIRS_reason_layout.add_widget(Label(text='Above 21'))
 
         if diabetes_i or diabetes_ii:
             pass
-        elif 140 <= float(glucose.obs_value) < 200:
+        elif glucose.obs_datetime != 0 and 140 <= float(glucose.obs_value) < 200:
             SIRS_criteria[3] = 1
             SIRS_criteria_layout.add_widget(Label(text=str(glucose)))
             SIRS_reason_layout.add_widget(Label(text='Between 140 and 200'))
 
         if colony_stimulating_factors:
             pass
-        elif float(leukocytes.obs_value) > 12000:
+        elif leukocytes.obs_datetime != 0 and float(leukocytes.obs_value) > 12000:
             SIRS_criteria[4] = 1
             SIRS_criteria_layout.add_widget(Label(text=str(leukocytes)))
             SIRS_reason_layout.add_widget(Label(text='Above 12000'))
-        elif float(leukocytes.obs_value) < 4000:
+        elif leukocytes.obs_datetime != 0 and float(leukocytes.obs_value) < 4000:
             SIRS_criteria[4] = 1
             SIRS_criteria_layout.add_widget(Label(text=str(leukocytes)))
             SIRS_reason_layout.add_widget(Label(text='Below 4000'))
-        elif float(blasts_per_100_leukocytes.obs_value) > 10:
+        elif blasts_per_100_leukocytes.obs_datetime != 0 and float(blasts_per_100_leukocytes.obs_value) > 10:
             SIRS_criteria[4] = 1
             SIRS_criteria_layout.add_widget(Label(text=str(blasts_per_100_leukocytes)))
             SIRS_reason_layout.add_widget(Label(text='Above 10'))
@@ -320,7 +318,7 @@ class RestApp(App):
 
         #Determine what criteria of organ dysfunction are met (with observations that are sufficiently recent)
         #If observations are not sufficiently recent, suggest labs
-        if (date_object - lactate.obs_datetime) < timedelta(hours = 12):
+        if lactate.obs_datetime != 0 and (date_object - lactate.obs_datetime) < timedelta(hours = 12):
             if float(lactate.obs_value) > 2:
                 organ_dysfunction_criteria[0] = 1
                 organ_criteria_layout.add_widget(Label(text=str(lactate)))
@@ -328,18 +326,18 @@ class RestApp(App):
         else:
             suggested_labs[0] = 1
 
-        if float(systolic_blood_pressure.obs_value) < 90 and (date_object - systolic_blood_pressure.obs_datetime) < timedelta(hours = 30):
+        if systolic_blood_pressure.obs_datetime != 0 and float(systolic_blood_pressure.obs_value) < 90 and (date_object - systolic_blood_pressure.obs_datetime) < timedelta(hours = 30):
             organ_dysfunction_criteria[1] = 1
             organ_criteria_layout.add_widget(Label(text=str(systolic_blood_pressure)))
             organ_reason_layout.add_widget(Label(text='Below 90'))
-        elif mean_arterial_pressure < 65 and (date_object - systolic_blood_pressure.obs_datetime) < timedelta(hours = 30) and (date_object - diastolic_blood_pressure.obs_datetime) < timedelta(hours = 30):
+        elif systolic_blood_pressure.obs_datetime != 0 and diastolic_blood_pressure.obs_datetime != 0 and mean_arterial_pressure < 65 and (date_object - systolic_blood_pressure.obs_datetime) < timedelta(hours = 30) and (date_object - diastolic_blood_pressure.obs_datetime) < timedelta(hours = 30):
             organ_dysfunction_criteria[1] = 1
             organ_criteria_layout.add_widget(Label(text=str(systolic_blood_pressure)))
             organ_criteria_layout.add_widget(Label(text=str(diastolic_blood_pressure)))
             organ_reason_layout.add_widget(Label(text='Mean Arterial Pressure'))
             organ_reason_layout.add_widget(Label(text='is below 65'))
 
-        if (date_object - creatinine.obs_datetime) < timedelta(hours = 30):
+        if creatinine.obs_datetime != 0 and (date_object - creatinine.obs_datetime) < timedelta(hours = 30):
             if creatinine.get_creatinine_change() > 0.5:
                 organ_dysfunction_criteria[2] = 1
                 organ_criteria_layout.add_widget(Label(text=str(creatinine)))
@@ -347,7 +345,7 @@ class RestApp(App):
         else:
             suggested_labs[1] = 1
 
-        if (date_object - bilirubin_total.obs_datetime) < timedelta(hours = 30):
+        if bilirubin_total.obs_datetime != 0 and (date_object - bilirubin_total.obs_datetime) < timedelta(hours = 30):
             if 2 <= float(bilirubin_total.obs_value) < 10:
                 organ_dysfunction_criteria[3] = 1
                 organ_criteria_layout.add_widget(Label(text=str(bilirubin_total)))
@@ -356,19 +354,19 @@ class RestApp(App):
             suggested_labs[2] = 1
 
         #Additional labs to be suggested if labs are not within timeframe
-        if (date_object - platelets_timestamp) < timedelta(hours = 30):
+        if platelets_timestamp != 0 and (date_object - platelets_timestamp) < timedelta(hours = 30):
             suggested_labs[3] = 1
-        if (date_object - partial_thromboplastin_time_timestamp) < timedelta(hours = 30):
+        if partial_thromboplastin_time_timestamp != 0 and (date_object - partial_thromboplastin_time_timestamp) < timedelta(hours = 30):
             suggested_labs[4] = 1
             if heparin:
                 suggested_labs[4] = 0
-        if (date_object - bacteria_culture_timestamp) < timedelta(hours = 30):
+        if bacteria_culture_timestamp != 0 and (date_object - bacteria_culture_timestamp) < timedelta(hours = 30):
             suggested_labs[5] = 1
-        if (date_object - fungus_culture_timestamp) < timedelta(hours = 30):
+        if fungus_culture_timestamp != 0 and (date_object - fungus_culture_timestamp) < timedelta(hours = 30):
             suggested_labs[6] = 1
-        if (date_object - virus_culture_timestamp) < timedelta(hours = 30):
+        if virus_culture_timestamp != 0 and (date_object - virus_culture_timestamp) < timedelta(hours = 30):
             suggested_labs[7] = 1
-        if (date_object - urinalysis_timestamp) < timedelta(hours = 30):
+        if urinalysis_timestamp != 0 and (date_object - urinalysis_timestamp) < timedelta(hours = 30):
             suggested_labs[8] = 1
 
         #Determine the number of organ dysfunction criteria met
