@@ -1,4 +1,4 @@
-__app_package__ = 'sepsis'
+__app_package__ = 'edu.sepsis'
 
 
 class Observation:
