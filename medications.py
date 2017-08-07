@@ -2,8 +2,10 @@ from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
-Persisted = declarative_base()
+__app_package__ = 'edu.sepsis'
 
+
+Persisted = declarative_base()
 
 class Medications(Persisted):
     __tablename__ = 'medications'
