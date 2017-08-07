@@ -10,4 +10,6 @@ should be run.
 
 Contains:  determination.py, main.py, medications.py, medications_installer.py, observations.py, openmrs.py, rest.kv, testing (system_test_frames, system_tests)
 
-Project Status:  Incomplete (medications database and methods missing), no known bugs or errors
+Project Status:  Incomplete, no known bugs or issues
+
+Install Instructions:
