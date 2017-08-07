@@ -1,5 +1,7 @@
 from kivy.network.urlrequest import UrlRequest
 
+__app_package__ = 'edu.sepsis'
+
 import base64
 import json
 try:

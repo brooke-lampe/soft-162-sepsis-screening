@@ -1,0 +1,281 @@
+St. John Sepsis Agent algorithm
+Unit Test Frames
+
+Categories (covered by)
+    Determination
+        Indeterminate (test_indeterminate_1)
+        SIRS Likely (test_sirs_1)
+        Sepsis Likely (test_sepsis_1)
+    Observation
+        Temperature
+            Safe range (test_indeterminate_1)
+            Above range (test_sirs_1)
+            Below range (test_sepsis_1)
+        Pulse
+            Safe range (test_indeterminate_1)
+            Above range (test_sirs_1)
+        Respiratory Rate
+            In range (test_indeterminate_1)
+            Above range (test_sirs_1)
+        Glucose
+            Safe range (test_indeterminate_1)
+            Unsafe range (test_sirs_1)
+        Leukocytes
+            Safe range (test_indeterminate_1)
+            Above range (test_sirs_1)
+            Below range (test_sepsis_1)
+        Blasts per 100 leukocytes
+            Safe range (test_indeterminate_1)
+            Above range (test_sirs_1)
+        Lactate
+            Safe range (test_indeterminate_1)
+            Above range (test_sepsis_1)
+            Suggest lab (test_sirs_3)
+            Not suggest lab (test_sirs_2)
+        Systolic blood pressure
+            Safe range (test_indeterminate_1)
+            Below range (test_sepsis_1)
+        Mean Arterial Pressure
+            Safe range (test_indeterminate_1)
+            Below range (test_sepsis_1)
+        Creatinine Difference
+            Safe range (test_indeterminate_1)
+            Above range (test_sepsis_1)
+            Suggest lab (test_sirs_3)
+            Not suggest lab (test_sirs_2)
+        Bilirubin Total
+            Safe range (test_indeterminate_1)
+            Unsafe range (test_sepsis_1)
+            Suggest lab (test_sirs_3)
+            Not suggest lab (test_sirs_2)
+        Platelets
+            Suggest lab (test_sirs_2)
+            Not suggest lab (test_sirs_1)
+        Partial Thromboplastin Time
+            Suggest lab (test_sirs_2)
+            Not suggest lab (test_sirs_1)
+        Blood Cultures, Bacteria
+            Suggest lab (test_sirs_2)
+            Not suggest lab (test_sirs_1)
+        Blood Cultures, Fungus
+            Suggest lab (test_sirs_2)
+            Not suggest lab (test_sirs_1)
+        Blood Cultures, Viruses
+            Suggest lab (test_sirs_2)
+            Not suggest lab (test_sirs_1)
+        Urinalysis
+            Suggest lab (test_sirs_2)
+            Not suggest lab (test_sirs_1)
+
+
+Test Frames
+-----------
+Name (implemented by)           Input
+-----------------------------------------------------------------------------------------------------
+test_indeterminate_1            patient_id_and_name = 10000X - Brooke Lampe
+                                current_timestamp = 2017-08-06 15:14:52.608206
+                                diabetes_i = False
+                                diabetes_ii = False
+                                ERSD = False
+                                temperature = 37.5
+                                pulse = 90
+                                respiratory_rate = 20
+                                systolic_blood_pressure = 120
+                                diastolic_blood_pressure = 80
+                                leukocytes = 10000
+                                blasts_per_100_leukocytes = 8
+                                glucose = 120
+                                lactate = 1
+                                creatinine difference = 0.25
+                                bilirubin_total = 12
+                                platelets_timestamp = 0
+                                partial_thromboplastin_time_timestamp = 0
+                                bacteria_culture_timestamp = 0
+                                fungus_culture_timestamp = 0
+                                virus_culture_timestamp = 0
+                                urinalysis_timestamp = 0
+                                colony_stimulating_factors = False
+                                heparin = False
+                                recombinant_human_erythropoientins = False
+
+test_indeterminate_2            patient_id_and_name = 10000X - Brooke Lampe
+                                current_timestamp = 2017-08-06 15:14:52.608206
+                                diabetes_i = False
+                                diabetes_ii = False
+                                ERSD = True
+                                temperature = 41
+                                pulse = 99
+                                respiratory_rate = 20
+                                systolic_blood_pressure = 120
+                                diastolic_blood_pressure = 80
+                                leukocytes = 10000
+                                blasts_per_100_leukocytes = 8
+                                glucose = 120
+                                lactate = 1
+                                creatinine difference = 1.25
+                                bilirubin_total = 12
+                                platelets_timestamp = 0
+                                partial_thromboplastin_time_timestamp = 0
+                                bacteria_culture_timestamp = 0
+                                fungus_culture_timestamp = 0
+                                virus_culture_timestamp = 0
+                                urinalysis_timestamp = 0
+                                colony_stimulating_factors = False
+                                heparin = False
+                                recombinant_human_erythropoientins = False
+
+test_indeterminate_3            patient_id_and_name = 10000X - Brooke Lampe
+                                current_timestamp = 2017-08-06 15:14:52.608206
+                                diabetes_i = False
+                                diabetes_ii = False
+                                ERSD = False
+                                temperature = 41
+                                pulse = 99
+                                respiratory_rate = 20
+                                systolic_blood_pressure = 120
+                                diastolic_blood_pressure = 80
+                                leukocytes = 10000
+                                blasts_per_100_leukocytes = 8
+                                glucose = 120
+                                lactate = 1
+                                creatinine difference = 1.25
+                                bilirubin_total = 12
+                                platelets_timestamp = 0
+                                partial_thromboplastin_time_timestamp = 0
+                                bacteria_culture_timestamp = 0
+                                fungus_culture_timestamp = 0
+                                virus_culture_timestamp = 0
+                                urinalysis_timestamp = 0
+                                colony_stimulating_factors = False
+                                heparin = False
+                                recombinant_human_erythropoientins = True
+
+test_sirs_1                     patient_id_and_name = 10000X - Brooke Lampe
+                                current_timestamp = 2017-08-06 15:14:52.608206
+                                diabetes_i = True
+                                diabetes_ii = True
+                                ERSD = True
+                                temperature = 39
+                                pulse = 100
+                                respiratory_rate = 22
+                                systolic_blood_pressure = 120
+                                diastolic_blood_pressure = 80
+                                leukocytes = 15000
+                                blasts_per_100_leukocytes = 12
+                                glucose = 160
+                                lactate = 1
+                                creatinine difference = 0.25
+                                bilirubin_total = 12
+                                platelets_timestamp = 2017-08-06 13:14:52.608206
+                                partial_thromboplastin_time_timestamp = 2017-08-06 13:14:52.608206
+                                bacteria_culture_timestamp = 2017-08-06 13:14:52.608206
+                                fungus_culture_timestamp = 2017-08-06 13:14:52.608206
+                                virus_culture_timestamp = 2017-08-06 13:14:52.608206
+                                urinalysis_timestamp = 2017-08-06 13:14:52.608206
+                                colony_stimulating_factors = True
+                                heparin = False
+                                recombinant_human_erythropoientins = True
+
+test_sirs_2                     patient_id_and_name = 10000X - Brooke Lampe
+                                current_timestamp = 2017-08-06 15:14:52.608206
+                                diabetes_i = False
+                                diabetes_ii = False
+                                ERSD = False
+                                temperature = 40
+                                pulse = 90
+                                respiratory_rate = 20
+                                systolic_blood_pressure = 120
+                                diastolic_blood_pressure = 80
+                                leukocytes = 15000
+                                blasts_per_100_leukocytes = 8
+                                glucose = 160
+                                lactate = 1
+                                creatinine difference = 0.25
+                                bilirubin_total = 12
+                                platelets_timestamp = 0
+                                partial_thromboplastin_time_timestamp = 0
+                                bacteria_culture_timestamp = 0
+                                fungus_culture_timestamp = 0
+                                virus_culture_timestamp = 0
+                                urinalysis_timestamp = 0
+                                colony_stimulating_factors = False
+                                heparin = False
+                                recombinant_human_erythropoientins = False
+
+test_sirs_3                     patient_id_and_name = 10000X - Brooke Lampe
+                                current_timestamp = 2017-08-06 15:14:52.608206
+                                diabetes_i = False
+                                diabetes_ii = False
+                                ERSD = False
+                                temperature = 40
+                                pulse = 90
+                                respiratory_rate = 20
+                                systolic_blood_pressure = 120
+                                diastolic_blood_pressure = 80
+                                leukocytes = 15000
+                                blasts_per_100_leukocytes = 8
+                                glucose = 160
+                                lactate = N/A
+                                creatinine difference = N/A
+                                bilirubin_total = N/A
+                                platelets_timestamp = 0
+                                partial_thromboplastin_time_timestamp = 0
+                                bacteria_culture_timestamp = 0
+                                fungus_culture_timestamp = 0
+                                virus_culture_timestamp = 0
+                                urinalysis_timestamp = 0
+                                colony_stimulating_factors = False
+                                heparin = False
+                                recombinant_human_erythropoientins = False
+
+test_sepsis_1                   patient_id_and_name = 10000X - Brooke Lampe
+                                current_timestamp = 2017-08-06 15:14:52.608206
+                                diabetes_i = True
+                                diabetes_ii = True
+                                ERSD = True
+                                temperature = 34
+                                pulse = 100
+                                respiratory_rate = 22
+                                systolic_blood_pressure = 60
+                                diastolic_blood_pressure = 40
+                                leukocytes = 3000
+                                blasts_per_100_leukocytes = 12
+                                glucose = 120
+                                lactate = 4
+                                creatinine difference = 1.25
+                                bilirubin_total = 8
+                                platelets_timestamp = 0
+                                partial_thromboplastin_time_timestamp = 0
+                                bacteria_culture_timestamp = 0
+                                fungus_culture_timestamp = 0
+                                virus_culture_timestamp = 0
+                                urinalysis_timestamp = 0
+                                colony_stimulating_factors = False
+                                heparin = True
+                                recombinant_human_erythropoientins = True
+
+test_sepsis_2                   patient_id_and_name = 10000X - Brooke Lampe
+                                current_timestamp = 2017-08-06 15:14:52.608206
+                                diabetes_i = True
+                                diabetes_ii = True
+                                ERSD = False
+                                temperature = 34
+                                pulse = 100
+                                respiratory_rate = 22
+                                systolic_blood_pressure = 120
+                                diastolic_blood_pressure = 80
+                                leukocytes = 3000
+                                blasts_per_100_leukocytes = 12
+                                glucose = 120
+                                lactate = 1
+                                creatinine difference = 1.25
+                                bilirubin_total = 12
+                                platelets_timestamp = 0
+                                partial_thromboplastin_time_timestamp = 0
+                                bacteria_culture_timestamp = 0
+                                fungus_culture_timestamp = 0
+                                virus_culture_timestamp = 0
+                                urinalysis_timestamp = 0
+                                colony_stimulating_factors = False
+                                heparin = True
+                                recombinant_human_erythropoientins = False
