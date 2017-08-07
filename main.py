@@ -436,11 +436,15 @@ class RestApp(App):
                     count = 1
             if count == 0:
                 suggested_layout.add_widget(Label(text='N/A'))
+            else:
+                return True
 
         elif classification == 2:
             self.root.ids.determination_summary.text = 'Sepsis Likely'
             self.root.ids.treatment.text = 'Treat patient for Sepsis'
             suggested_layout.add_widget(Label(text='N/A'))
+
+        return False
 
     def clear(self):
         self.lab_observations.clear()
