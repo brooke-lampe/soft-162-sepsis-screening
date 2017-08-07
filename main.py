@@ -238,10 +238,8 @@ class RestApp(App):
         if date_entered != '':
             try:
                 date_entered= datetime.strptime(date_entered, '%Y-%m-%d')
-                medication_list=[]
                 while(datetime.today()-date_entered == timedelta(1)):
-                    query = self.session.query(Medications).filter(Medications.name == 'Heparin', Medications .patient_name == date_entered).delete()
-                    self.session.add(medication_list)
+                    self.session.query(Medications).filter(Medications.name == 'Heparin', Medications.patient_id == self.root.ids.openmrs_id.text).delete()
                     if date_entered >  timedelta(1) and date_entered < timedelta(0):
                        self.taking_heparin= False
                     elif date_entered ==  timedelta(0):
