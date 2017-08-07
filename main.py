@@ -2,16 +2,34 @@ from datetime import *
 
 from kivy.app import App
 from kivy.logger import Logger
+from kivy.properties import BooleanProperty, StringProperty
 
+from medications import Medications, MedicationsDatabase
+#from medications_list import MedicationsList
 from observations import Observation, Diagnosis
 from openmrs import RESTConnection
 from kivy.uix.label import Label
 
+__app_package__ = 'edu.unl.cse.soft162.sepsis'
+__app__ = 'Sepsis'
+__version__ = '1.0'
+__flags__ = ['--bootstrap=sdl2', '--requirements=python2,kivy', '--permission=INTERNET']
 
 class RestApp(App):
+    message = StringProperty()
+    taking_eythropoitiens= BooleanProperty()
+    taking_colonyfactors= BooleanProperty()
+    taking_heparin = BooleanProperty()
+
+
+    #medication_list = MedicationsList()
 
     def __init__(self, **kwargs):
         super(RestApp, self).__init__(**kwargs)
+        url = MedicationsDatabase.construct_mysql_url('cse.unl.edu', 3306, 'kheyen', 'kheyen', 'AdJ:8w')
+        self.medications_database = MedicationsDatabase(url)
+        self.session = self.medications_database.create_session()
+
 
     def connect(self):
         self.openmrs_connection = RESTConnection(self.root.ids.authority.text, self.root.ids.port_number.text, self.root.ids.username.text, self.root.ids.password.text)
@@ -201,6 +219,112 @@ class RestApp(App):
 
     def on_encounters_not_loaded(self, request, error):
         Logger.error('RestApp: {error}'.format(error=error))
+
+
+    # check HEprain the function take the date that entered by the user and check if it valid date, then it check if the user take heprain in the last 24 hours
+    def check_heparin(self):
+        date_entered = self.root.ids.heparin_id.text
+        if date_entered != '':
+            try:
+               if datetime.datetime(date_entered) == True:
+                medication_list=[]
+                while(datetime.today()-date_entered == timedelta(1)):
+                    query = self.session.query(Medications).filter(Medications.name == 'Heparin', Medications .patient_name == date_entered).delete()
+                    self.session.add(medication_list)
+                    if date_entered >  timedelta(1) and date_entered < timedelta(0):
+                       taking_heparin= False
+                    elif date_entered ==  timedelta(0):
+                        staking_heparin=True
+            except ValueError():
+                self.message = 'Invalid Input - Enter proper format: YYYY-MM-DD'
+            except Exception():
+                self.message = 'Invalid Input - Enter a valid date: YYYY-MM-DD'
+
+        new_medication= Medications(medications_name='Heparin', taking_date= date_entered, patient_id = 'patient_id')
+        self.session.add(new_medication)
+        self.session.commit()
+        print(query)
+
+def CheckColonyFactor(self):
+    date_entered = self.root.ids.colonyFactor_id.text
+    if date_entered != '':
+        try:
+            year, month, day = date_entered.splite('-')
+            year = int(year)
+            month = int(month)
+            day = int(day)
+
+            if year > datetime.now().year:
+                raise  Exception
+            if month > 12:
+                raise  Exception
+            if month < 1:
+                raise Exception
+            if day > 31:
+                raise Exception
+            if day < 1:
+                raise Exception
+
+            medication_list=[]
+            while(datetime.today()-date_entered < timedelta(60)):
+                query = self.session.query(Medications).filter(Medications.name == 'ColonyFactors', Medications.taking_date == date_entered).first()
+                self.session.add(medication_list)
+                if date_entered > timedelta(60) and date_entered < timedelta(0):
+                   taking_colonyfactors=False
+                elif date_entered <=  timedelta(60):
+                    taking_colonyfactors= True
+        except ValueError():
+            self.message = 'Invalid Input - Enter proper format: YYYY-MM-DD'
+        except Exception():
+            self.message = 'Invalid Input - Enter a valid date: YYYY-MM-DD'
+
+    new_medication= Medications(medications_name='ColonyFactors', taking_date= date_entered, )
+    self.session.add(new_medication)
+    self.session.commit()
+    print(query)
+
+    def check_erythropoietin(self, other):
+        date_entered = self.root.ids.eythropoitiens_id.text
+        if date_entered == '':
+            pass
+        else:
+            try:
+                year, month, day = date_entered.splite('-')
+                year = int(year)
+                month = int(month)
+                day = int(day)
+
+                if year > datetime.now().year:
+                    raise  Exception
+                if month > 12:
+                    raise  Exception
+                if month < 1:
+                    raise Exception
+                if day > 31:
+                    raise Exception
+                if day < 1:
+                    raise Exception
+
+                medication_list=[]
+                while(datetime.today()-date_entered < timedelta(60)):
+                    query = self.session.query(Medications).filter(Medications.name == 'Erythropoietin', Medications.taking_date == date_entered).first()
+                    self.session.add(medication_list)
+                    if date_entered >  timedelta(60) and date_entered < timedelta(0):
+                       taking_eythropoitiens= False
+                    elif date_entered <=  timedelta(60):
+                        taking_eythropoitiens  == True
+            except ValueError:
+                self.message = 'Invalid Input - Enter proper format: YYYY-MM-DD'
+            except Exception:
+                self.message = 'Invalid Input - Enter a valid date: YYYY-MM-DD'
+
+        new_medication= Medications(medications_name='Erythropoietin', patient_id= 'patient_id')
+        self.session.add(new_medication)
+        self.session.commit()
+        print(query)
+
+
+
 
 
 if __name__ == "__main__":
