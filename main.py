@@ -490,12 +490,17 @@ class RestApp(App):
                         self.staking_heparin=True
             except ValueError:
                 self.message = 'Invalid Input - Enter proper format: YYYY-MM-DD'
+                self.root.current = 'medication'
+                return
             except Exception:
                 self.message = 'Invalid Input - Enter a valid date: YYYY-MM-DD'
+                self.root.current = 'medication'
+                return
 
         new_medication= Medications(medications_name='Heparin', taking_date= date_entered, patient_id = self.root.ids.openmrs_id.text)
         self.session.add(new_medication)
         self.session.commit()
+        self.root.current ='determination'
 
 
     def CheckColonyFactor(self):
@@ -511,9 +516,9 @@ class RestApp(App):
                        self.taking_colonyfactors=False
                     elif date_entered <=  timedelta(60):
                         self.taking_colonyfactors= True
-            except ValueError():
+            except ValueError:
                 self.message = 'Invalid Input - Enter proper format: YYYY-MM-DD'
-            except Exception():
+            except Exception:
                 self.message = 'Invalid Input - Enter a valid date: YYYY-MM-DD'
 
         new_medication= Medications(medications_name='ColonyFactors', taking_date= date_entered, patient_id = self.root.ids.openmrs_id.text )
