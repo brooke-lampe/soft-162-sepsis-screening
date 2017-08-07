@@ -44,7 +44,7 @@ class RestApp(App):
                                     'Systolic blood pressure': Observation('Vitals', 'Systolic blood pressure', 0, 0),
                                     'Diastolic blood pressure': Observation('Vitals', 'Diastolic blood pressure', 0, 0)}
 
-        self.lab_observations = {'Leukocytes (#/mL)0000000000000000000000000000000000000000000000000000000000': Observation('Labs', 'Leukocytes (#/mL)', 0, 0),
+        self.lab_observations = {'Leukocytes (#/mL)': Observation('Labs', 'Leukocytes (#/mL)', 0, 0),
                                         'Blasts per 100 Leukocytes (%)': Observation('Labs', 'Blasts per 100 Leukocytes (%)', 0, 0),
                                         'Glucose in Blood (mg/dL)': Observation('Labs', 'Glucose in Blood (mg/dL)', 0, 0),
                                         'Lactate in Blood (mmol/L)': Observation('Labs', 'Lactate in Blood (mmol/L)', 0, 0),
