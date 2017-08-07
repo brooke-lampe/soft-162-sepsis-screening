@@ -497,6 +497,7 @@ class RestApp(App):
         self.session.add(new_medication)
         self.session.commit()
 
+
     def CheckColonyFactor(self):
         date_entered = self.root.ids.colonyFactor_id.text
         if date_entered != '':
@@ -504,7 +505,7 @@ class RestApp(App):
                 date_entered =datetime.strptime(date_entered, '%Y-%m-%d')
                 medication_list=[]
                 while(datetime.today()-date_entered < timedelta(60)):
-                    query = self.session.query(Medications).filter(Medications.name == 'ColonyFactors', Medications.taking_date == date_entered).first()
+                    query = self.session.query(Medications).filter(Medications.name == 'ColonyFactors', Medications.taking_date == date_entered).delete()
                     self.session.add(medication_list)
                     if date_entered > timedelta(60) and date_entered < timedelta(0):
                        self.taking_colonyfactors=False
@@ -528,7 +529,7 @@ class RestApp(App):
                 date_entered=datetime.strptime(date_entered, '%Y-%m-%d')
                 medication_list=[]
                 while(datetime.today()-date_entered < timedelta(60)):
-                    query = self.session.query(Medications).filter(Medications.name == 'Erythropoietin', Medications.taking_date == date_entered).first()
+                    query = self.session.query(Medications).filter(Medications.name == 'Erythropoietin', Medications.taking_date == date_entered).delete()
                     self.session.add(medication_list)
                     if date_entered >  timedelta(60) and date_entered < timedelta(0):
                        self.taking_erythropoietin= False
