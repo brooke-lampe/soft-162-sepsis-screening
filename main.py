@@ -2,13 +2,24 @@ from datetime import *
 
 from kivy.app import App
 from kivy.logger import Logger
+from kivy.properties import BooleanProperty, StringProperty
 
+
+from medications import Medications, MedicationsDatabase
 from observations import Observation, Diagnosis, Creatinine
 from openmrs import RESTConnection
 from kivy.uix.label import Label
 
+__app_package__ = 'edu.unl.cse.soft162.sepsis'
+__app__ = 'Sepsis'
+__version__ = '1.0'
+__flags__ = ['--bootstrap=sdl2', '--requirements=python2,kivy', '--permission=INTERNET']
 
 class RestApp(App):
+    message = StringProperty()
+    taking_erythropoietin= BooleanProperty()
+    taking_colonyfactors= BooleanProperty()
+    taking_heparin = BooleanProperty()
 
     # Data members
     lab_observations = {}
@@ -23,13 +34,17 @@ class RestApp(App):
 
     def __init__(self, **kwargs):
         super(RestApp, self).__init__(**kwargs)
+        url = MedicationsDatabase.construct_mysql_url('cse.unl.edu', 3306, 'kheyen', 'kheyen', 'AdJ:8w')
+        self.medications_database = MedicationsDatabase(url)
+        self.session = self.medications_database.create_session()
+
         self.vitals_observations = {'Temperature (C)': Observation('Vitals', 'Temperature (C)', 0, 0),
                                     'Pulse': Observation('Vitals', 'Pulse', 0, 0),
                                     'Respiratory rate': Observation('Vitals', 'Respiratory rate', 0, 0),
                                     'Systolic blood pressure': Observation('Vitals', 'Systolic blood pressure', 0, 0),
                                     'Diastolic blood pressure': Observation('Vitals', 'Diastolic blood pressure', 0, 0)}
 
-        self.lab_observations = {'Leukocytes (#/mL)': Observation('Labs', 'Leukocytes (#/mL)', 0, 0),
+        self.lab_observations = {'Leukocytes (#/mL)0000000000000000000000000000000000000000000000000000000000': Observation('Labs', 'Leukocytes (#/mL)', 0, 0),
                                         'Blasts per 100 Leukocytes (%)': Observation('Labs', 'Blasts per 100 Leukocytes (%)', 0, 0),
                                         'Glucose in Blood (mg/dL)': Observation('Labs', 'Glucose in Blood (mg/dL)', 0, 0),
                                         'Lactate in Blood (mmol/L)': Observation('Labs', 'Lactate in Blood (mmol/L)', 0, 0),
@@ -41,6 +56,7 @@ class RestApp(App):
                                         'Blood Cultures, Bacteria': Observation('Labs', 'Blood Cultures, Bacteria', 0, 0),
                                         'Blood Cultures, Fungus': Observation('Labs', 'Blood Cultures, Fungus', 0, 0),
                                         'Urinalysis': Observation('Labs', 'Urinalysis', 0, 0)}
+
 
     def connect(self):
         self.openmrs_connection = RESTConnection(self.root.ids.authority.text, self.root.ids.port_number.text, self.root.ids.username.text, self.root.ids.password.text)
@@ -461,6 +477,79 @@ class RestApp(App):
         self.root.ids.organ_reason.clear_widgets()
         self.root.ids.treatment.text = ''
         self.root.ids.suggested_layout.clear_widgets()
+
+    # check HEprain the function take the date that entered by the user and check if it valid date, then it check if the user take heprain in the last 24 hours
+    def check_heparin(self):
+        date_entered = self.root.ids.heparin_id.text
+        if date_entered != '':
+            try:
+                date_entered= datetime.strptime(date_entered, '%Y-%m-%d')
+                medication_list=[]
+                while(datetime.today()-date_entered == timedelta(1)):
+                    query = self.session.query(Medications).filter(Medications.name == 'Heparin', Medications .patient_name == date_entered).delete()
+                    self.session.add(medication_list)
+                    if date_entered >  timedelta(1) and date_entered < timedelta(0):
+                       self.taking_heparin= False
+                    elif date_entered ==  timedelta(0):
+                        self.staking_heparin=True
+            except ValueError:
+                self.message = 'Invalid Input - Enter proper format: YYYY-MM-DD'
+            except Exception:
+                self.message = 'Invalid Input - Enter a valid date: YYYY-MM-DD'
+
+        new_medication= Medications(medications_name='Heparin', taking_date= date_entered, patient_id = self.root.ids.openmrs_id.text)
+        self.session.add(new_medication)
+        self.session.commit()
+
+
+    def CheckColonyFactor(self):
+        date_entered = self.root.ids.colonyFactor_id.text
+        if date_entered != '':
+            try:
+                date_entered =datetime.strptime(date_entered, '%Y-%m-%d')
+                medication_list=[]
+                while(datetime.today()-date_entered < timedelta(60)):
+                    query = self.session.query(Medications).filter(Medications.name == 'ColonyFactors', Medications.taking_date == date_entered).delete()
+                    self.session.add(medication_list)
+                    if date_entered > timedelta(60) and date_entered < timedelta(0):
+                       self.taking_colonyfactors=False
+                    elif date_entered <=  timedelta(60):
+                        self.taking_colonyfactors= True
+            except ValueError():
+                self.message = 'Invalid Input - Enter proper format: YYYY-MM-DD'
+            except Exception():
+                self.message = 'Invalid Input - Enter a valid date: YYYY-MM-DD'
+
+        new_medication= Medications(medications_name='ColonyFactors', taking_date= date_entered, patient_id = self.root.ids.openmrs_id.text )
+        self.session.add(new_medication)
+        self.session.commit()
+
+    def check_erythropoietin(self):
+        date_entered = self.root.ids.eythropoitiens_id.text
+        if date_entered == '':
+            pass
+        else:
+            try:
+                date_entered=datetime.strptime(date_entered, '%Y-%m-%d')
+                medication_list=[]
+                while(datetime.today()-date_entered < timedelta(60)):
+                    query = self.session.query(Medications).filter(Medications.name == 'Erythropoietin', Medications.taking_date == date_entered).delete()
+                    self.session.add(medication_list)
+                    if date_entered >  timedelta(60) and date_entered < timedelta(0):
+                       self.taking_erythropoietin= False
+                    elif date_entered <=  timedelta(60):
+                        self.taking_erythropoietin = True
+            except ValueError:
+                self.message = 'Invalid Input - Enter proper format: YYYY-MM-DD'
+            except Exception:
+                self.message = 'Invalid Input - Enter a valid date: YYYY-MM-DD'
+
+        new_medication= Medications(medications_name='Erythropoietin', patient_id= self.root.ids.openmrs_id.text)
+        self.session.add(new_medication)
+        self.session.commit()
+
+
+
 
 
 if __name__ == "__main__":

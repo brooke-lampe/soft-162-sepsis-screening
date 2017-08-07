@@ -153,6 +153,52 @@ ScreenManager:
                 orientation: 'vertical'
                 id: medication_layout
             BoxLayout:
+                Widget:
+                    size_hint: (.1, 1)
+                BoxLayout:
+                    orientation: 'vertical'
+                    BoxLayout:
+                        orientation: 'horizontal'
+                        Label:
+                            text: 'heparin:'
+                            text_size: self.size
+                        TextInput:
+                            id: heparin_id
+                            hint_text: 'Enter taking date to (YYYY-MM-DD)'
+                            text: ''
+                            multiline: False
+                            font_size: '12sp'
+                    BoxLayout:
+                        orientation: 'horizontal'
+                        Label:
+                            text: 'colonyFactor:'
+                            text_size: self.size
+                        TextInput:
+                            id: colonyFactor_id
+                            hint_text: 'Enter taking date to (YYYY-MM-DD)'
+                            multiline: False
+                            text: ''
+                            font_size: '12sp'
+                    BoxLayout:
+                        orientation: 'horizontal'
+                        Label:
+                            text: 'eythropoitiens:'
+                            text_size: self.size
+                        TextInput:
+                            id: eythropoitiens_id
+                            hint_text: 'Enter taking date to (YYYY-MM-DD)'
+                            multiline: False
+                            text: ''
+                            font_size: '12sp'
+                    BoxLayout:
+                        Label:
+                            id: error_log
+                            text: str(app.message)
+
+                Widget:
+                    size_hint: (.1, 1)
+                    size_hint: (.1, 1)
+            BoxLayout:
                 orientation: 'horizontal'
                 BoxLayout:
                     orientation: 'vertical'
@@ -180,6 +226,9 @@ ScreenManager:
                     on_press:
                         root.transition.direction = 'left'
                         root.current = 'determination'
+                        app.check_heparin()
+                        app.CheckColonyFactor()
+                        app.check_erythropoietin()
                         app.retrieve()
     Screen:
         name: 'determination'
