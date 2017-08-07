@@ -8,7 +8,6 @@ from kivy.properties import BooleanProperty, StringProperty
 from medications import Medications, MedicationsDatabase
 from observations import Observation, Diagnosis, Creatinine
 from openmrs import RESTConnection
-from kivy.uix.label import Label
 
 __app_package__ = 'edu.sepsis'
 __app__ = 'Sepsis'
