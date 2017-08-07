@@ -232,7 +232,7 @@ class RestApp(App):
         self.root.ids.treatment.text = ''
         self.root.ids.suggested_layout.clear_widgets()
 
-    # check HEprain the function take the date that entered by the user and check if it valid date, then it check if the user take heprain in the last 24 hours
+    #Check heparin the function take the date that entered by the user and check if it valid date, then it check if the user take heparin in the last 24 hours
     def check_heparin(self):
         date_entered = self.root.ids.heparin_id.text
         if date_entered != '':
