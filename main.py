@@ -88,6 +88,13 @@ class RestApp(App):
             patient_uuid = result['uuid']
             self.load_encounters(patient_uuid)
             self.root.current = 'medication'
+            for medication_list, text_input in ('Heparin', self.root.ids.heparin_id), ( 'ColonyFactors',self.root.ids.colonyFactor_id), ('Erythropoietin', self.root.ids.eythropoitiens_id):
+                if self.session.query(Medications).filter(Medications.medications_name == medication_list, Medications.patient_id == self.root.ids.openmrs_id.text).first() is None:
+                    text_input.text = ''
+                else:
+                    #query = self.session.query(Medications).filter(Medications.medications_name== medication_list, Medications.patient_id == self.root.ids.openmrs_id.text).first().taking_date
+                    query = self.session.query(Medications).filter(Medications.medications_name == medication_list, Medications.patient_id == self.root.ids.openmrs_id.text).first()
+                    text_input.text= str(self.session.query(Medications).filter(Medications.medications_name == medication_list, Medications.patient_id == self.root.ids.openmrs_id.text).first().taking_date)
 
         if patient_uuid == 'NULL':
             self.root.ids.retrieve.text = 'Unable to retrieve patient information.'
@@ -238,11 +245,11 @@ class RestApp(App):
         if date_entered != '':
             try:
                 date_entered= datetime.strptime(date_entered, '%Y-%m-%d')
-                while(datetime.today()-date_entered == timedelta(1)):
+                while(datetime.today()-date_entered >= timedelta(0) and datetime.today()-date_entered <= timedelta(1)):
                     self.session.query(Medications).filter(Medications.name == 'Heparin', Medications.patient_id == self.root.ids.openmrs_id.text).delete()
-                    if date_entered >  timedelta(1) and date_entered < timedelta(0):
+                    if datetime.today()-date_entered  >  timedelta(1) and datetime.today()-date_entered  < timedelta(0):
                        self.taking_heparin= False
-                    elif date_entered ==  timedelta(0):
+                    elif (datetime.today()-date_entered >= timedelta(0) and datetime.today()-date_entered <= timedelta(1)):
                         self.staking_heparin=True
             except ValueError:
                 self.message = 'Invalid Input - Enter proper format: YYYY-MM-DD'
@@ -266,11 +273,11 @@ class RestApp(App):
                 date_entered =datetime.strptime(date_entered, '%Y-%m-%d')
                 medication_list=[]
                 while(datetime.today()-date_entered < timedelta(60)):
-                    query = self.session.query(Medications).filter(Medications.name == 'ColonyFactors', Medications.taking_date == date_entered).delete()
+                    query = self.session.query(Medications).filter(Medications.name == 'ColonyFactors', Medications.patient_id == self.root.ids.openmrs_id.text).delete()
                     self.session.add(medication_list)
-                    if date_entered > timedelta(60) and date_entered < timedelta(0):
+                    if datetime.today()-date_entered > timedelta(60) and datetime.today()-date_entered < timedelta(0):
                        self.taking_colonyfactors=False
-                    elif date_entered <=  timedelta(60):
+                    elif datetime.today()-date_entered <=  timedelta(60):
                         self.taking_colonyfactors= True
             except ValueError:
                 self.message = 'Invalid Input - Enter proper format: YYYY-MM-DD'
@@ -289,19 +296,19 @@ class RestApp(App):
             try:
                 date_entered=datetime.strptime(date_entered, '%Y-%m-%d')
                 medication_list=[]
-                while(datetime.today()-date_entered < timedelta(60)):
+                while(datetime.today()-date_entered <= timedelta(30)):
                     query = self.session.query(Medications).filter(Medications.name == 'Erythropoietin', Medications.taking_date == date_entered).delete()
                     self.session.add(medication_list)
-                    if date_entered >  timedelta(60) and date_entered < timedelta(0):
+                    if datetime.today()-date_entered >  timedelta(30) and date_entered < timedelta(0):
                        self.taking_erythropoietin= False
-                    elif date_entered <=  timedelta(60):
+                    elif datetime.today()-date_entered <=  timedelta(30):
                         self.taking_erythropoietin = True
             except ValueError:
                 self.message = 'Invalid Input - Enter proper format: YYYY-MM-DD'
             except Exception:
                 self.message = 'Invalid Input - Enter a valid date: YYYY-MM-DD'
 
-        new_medication= Medications(medications_name='Erythropoietin', patient_id= self.root.ids.openmrs_id.text)
+        new_medication= Medications(medications_name='Erythropoietin', taking_date= date_entered, patient_id= self.root.ids.openmrs_id.text)
         self.session.add(new_medication)
         self.session.commit()
 
