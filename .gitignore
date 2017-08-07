@@ -1,4 +1,5 @@
-.idea
+*.idea
 *.pyc
 *.pyo
 *.apk
+*.xml
