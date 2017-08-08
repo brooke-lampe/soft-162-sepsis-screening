@@ -16,9 +16,10 @@ __flags__ = ['--bootstrap=sdl2', '--requirements=python2,kivy', '--permission=IN
 
 class RestApp(App):
     message = StringProperty()
-    taking_erythropoietin= BooleanProperty()
-    taking_colonyfactors= BooleanProperty()
+    taking_erythropoietin = BooleanProperty()
+    taking_colonyfactors = BooleanProperty()
     taking_heparin = BooleanProperty()
+    advance = [True, True, True]
 
     # Data members
     lab_observations = {}
@@ -94,7 +95,7 @@ class RestApp(App):
                 else:
                     #query = self.session.query(Medications).filter(Medications.medications_name== medication_list, Medications.patient_id == self.root.ids.openmrs_id.text).first().taking_date
                     query = self.session.query(Medications).filter(Medications.medications_name == medication_list, Medications.patient_id == self.root.ids.openmrs_id.text).first()
-                    text_input.text= str(self.session.query(Medications).filter(Medications.medications_name == medication_list, Medications.patient_id == self.root.ids.openmrs_id.text).first().taking_date)
+                    text_input.text = str(self.session.query(Medications).filter(Medications.medications_name == medication_list, Medications.patient_id == self.root.ids.openmrs_id.text).first().taking_date)
 
         if patient_uuid == 'NULL':
             self.root.ids.retrieve.text = 'Unable to retrieve patient information.'
@@ -239,54 +240,73 @@ class RestApp(App):
         self.root.ids.treatment.text = ''
         self.root.ids.suggested_layout.clear_widgets()
 
-    #Check heparin the function take the date that entered by the user and check if it valid date, then it check if the user take heparin in the last 24 hours
+    def clear_limited(self):
+        self.root.ids.patient_info.text = ''
+        self.root.ids.determination_timestamp.text = ''
+        self.root.ids.determination_summary.text = ''
+        self.root.ids.SIRS_criteria.clear_widgets()
+        self.root.ids.SIRS_reason.clear_widgets()
+        self.root.ids.organ_criteria.clear_widgets()
+        self.root.ids.organ_reason.clear_widgets()
+        self.root.ids.treatment.text = ''
+        self.root.ids.suggested_layout.clear_widgets()
+
+    #check_heparin:  The function accepts the date that entered by the user and checks if it valid date, then it checks if the user has taken heparin in the last 24 hours
     def check_heparin(self):
         date_entered = self.root.ids.heparin_id.text
         if date_entered != '':
             try:
-                date_entered= datetime.strptime(date_entered, '%Y-%m-%d')
-                while(datetime.today()-date_entered >= timedelta(0) and datetime.today()-date_entered <= timedelta(1)):
+                date_entered = datetime.strptime(date_entered, '%Y-%m-%d')
+                while timedelta(0) <= datetime.today() - date_entered <= timedelta(1):
                     self.session.query(Medications).filter(Medications.name == 'Heparin', Medications.patient_id == self.root.ids.openmrs_id.text).delete()
-                    if datetime.today()-date_entered  >  timedelta(1) and datetime.today()-date_entered  < timedelta(0):
-                       self.taking_heparin= False
-                    elif (datetime.today()-date_entered >= timedelta(0) and datetime.today()-date_entered <= timedelta(1)):
-                        self.staking_heparin=True
+                    if timedelta(1) < datetime.today() - date_entered < timedelta(0):
+                        self.taking_heparin = False
+                    elif timedelta(0) <= datetime.today() - date_entered <= timedelta(1):
+                        self.taking_heparin = True
             except ValueError:
-                self.message = 'Invalid Input - Enter proper format: YYYY-MM-DD'
+                self.root.ids.error_log.text = 'Invalid Input - Enter proper format: YYYY-MM-DD'
                 self.root.current = 'medication'
+                self.advance[0] = False
                 return
             except Exception:
-                self.message = 'Invalid Input - Enter a valid date: YYYY-MM-DD'
+                self.root.ids.error_log.text = 'Invalid Input - Enter a valid date: YYYY-MM-DD'
                 self.root.current = 'medication'
+                self.advance[0] = False
                 return
 
-        new_medication= Medications(medications_name='Heparin', taking_date= date_entered, patient_id = self.root.ids.openmrs_id.text)
+        new_medication= Medications(medications_name='Heparin', taking_date=date_entered, patient_id=self.root.ids.openmrs_id.text)
         self.session.add(new_medication)
         self.session.commit()
-        self.root.current ='determination'
+        self.advance[0] = True
 
-
-    def CheckColonyFactor(self):
+    def check_colony_factor(self):
         date_entered = self.root.ids.colonyFactor_id.text
         if date_entered != '':
             try:
-                date_entered =datetime.strptime(date_entered, '%Y-%m-%d')
-                medication_list=[]
-                while(datetime.today()-date_entered < timedelta(60)):
+                date_entered = datetime.strptime(date_entered, '%Y-%m-%d')
+                medication_list = []
+                while datetime.today() - date_entered < timedelta(60):
                     query = self.session.query(Medications).filter(Medications.name == 'ColonyFactors', Medications.patient_id == self.root.ids.openmrs_id.text).delete()
                     self.session.add(medication_list)
-                    if datetime.today()-date_entered > timedelta(60) and datetime.today()-date_entered < timedelta(0):
-                       self.taking_colonyfactors=False
-                    elif datetime.today()-date_entered <=  timedelta(60):
-                        self.taking_colonyfactors= True
+                    if timedelta(60) < datetime.today() - date_entered < timedelta(0):
+                       self.taking_colonyfactors = False
+                    elif datetime.today()- date_entered <= timedelta(60):
+                        self.taking_colonyfactors = True
             except ValueError:
-                self.message = 'Invalid Input - Enter proper format: YYYY-MM-DD'
+                self.root.ids.error_log.text = 'Invalid Input - Enter proper format: YYYY-MM-DD'
+                self.root.current = 'medication'
+                self.advance[1] = False
+                return
             except Exception:
-                self.message = 'Invalid Input - Enter a valid date: YYYY-MM-DD'
+                self.root.ids.error_log.text = 'Invalid Input - Enter a valid date: YYYY-MM-DD'
+                self.root.current = 'medication'
+                self.advance[1] = False
+                return
 
         new_medication= Medications(medications_name='ColonyFactors', taking_date= date_entered, patient_id = self.root.ids.openmrs_id.text )
         self.session.add(new_medication)
         self.session.commit()
+        self.advance[1] = True
 
     def check_erythropoietin(self):
         date_entered = self.root.ids.eythropoitiens_id.text
@@ -296,21 +316,28 @@ class RestApp(App):
             try:
                 date_entered=datetime.strptime(date_entered, '%Y-%m-%d')
                 medication_list=[]
-                while(datetime.today()-date_entered <= timedelta(30)):
+                while datetime.today() - date_entered <= timedelta(30):
                     query = self.session.query(Medications).filter(Medications.name == 'Erythropoietin', Medications.taking_date == date_entered).delete()
                     self.session.add(medication_list)
-                    if datetime.today()-date_entered >  timedelta(30) and date_entered < timedelta(0):
-                       self.taking_erythropoietin= False
-                    elif datetime.today()-date_entered <=  timedelta(30):
+                    if datetime.today() - date_entered > timedelta(30) and date_entered < timedelta(0):
+                        self.taking_erythropoietin = False
+                    elif datetime.today() - date_entered <= timedelta(30):
                         self.taking_erythropoietin = True
             except ValueError:
-                self.message = 'Invalid Input - Enter proper format: YYYY-MM-DD'
+                self.root.ids.error_log.text = 'Invalid Input - Enter proper format: YYYY-MM-DD'
+                self.root.current = 'medication'
+                self.advance[2] = False
+                return
             except Exception:
-                self.message = 'Invalid Input - Enter a valid date: YYYY-MM-DD'
+                self.root.ids.error_log.text = 'Invalid Input - Enter a valid date: YYYY-MM-DD'
+                self.root.current = 'medication'
+                self.advance[2] = False
+                return
 
-        new_medication= Medications(medications_name='Erythropoietin', taking_date= date_entered, patient_id= self.root.ids.openmrs_id.text)
+        new_medication= Medications(medications_name='Erythropoietin', taking_date=date_entered, patient_id=self.root.ids.openmrs_id.text)
         self.session.add(new_medication)
         self.session.commit()
+        self.advance[2] = True
 
     def retrieve(self):
         #Pull required data from the database
@@ -348,9 +375,14 @@ class RestApp(App):
         virus_culture_timestamp = self.lab_observations.get('Blood Cultures, Viruses').obs_datetime
         urinalysis_timestamp = self.lab_observations.get('Urinalysis').obs_datetime
 
-        colony_stimulating_factors = False
-        heparin = False
-        recombinant_human_erythropoientins = False
+        #Medications within timeframe
+        colony_stimulating_factors = self.taking_colonyfactors
+        heparin = self.taking_heparin
+        recombinant_human_erythropoientins = self.taking_erythropoietin
+
+        #Advance to determination screen if no ValueError or Exception
+        if self.advance[0] and self.advance[1] and self.advance[2]:
+            self.root.current = 'determination'
 
         #This will return True if more labs are needed, False if more labs are not needed
         self.determination(patient_id_and_name, current_timestamp, diabetes_i, diabetes_ii, ESRD, temperature, pulse, respiratory_rate, systolic_blood_pressure, diastolic_blood_pressure,

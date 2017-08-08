@@ -193,8 +193,7 @@ ScreenManager:
                     BoxLayout:
                         Label:
                             id: error_log
-                            text: str(app.message)
-
+                            text: ''
                 Widget:
                     size_hint: (.1, 1)
                     size_hint: (.1, 1)
@@ -211,6 +210,7 @@ ScreenManager:
                             root.ids.openmrs_id.text = ''
                             root.ids.retrieve.text = ''
                             root.ids.retrieve2.text = ''
+                            root.ids.error_log.text = ''
                             root.transition.direction = 'right'
                             root.current = 'log_in'
                             app.connect()
@@ -219,6 +219,7 @@ ScreenManager:
                         on_press:
                             root.ids.retrieve.text = ''
                             root.ids.retrieve2.text = ''
+                            root.ids.error_log.text = ''
                             root.transition.direction = 'right'
                             root.current = 'selection'
                 Button:
@@ -226,8 +227,9 @@ ScreenManager:
                     on_press:
                         root.transition.direction = 'left'
                         app.check_heparin()
-                        app.CheckColonyFactor()
+                        app.check_colony_factor()
                         app.check_erythropoietin()
+                        app.clear_limited()
                         app.retrieve()
     Screen:
         name: 'determination'
@@ -335,6 +337,7 @@ ScreenManager:
                                 root.ids.openmrs_id.text = ''
                                 root.ids.retrieve.text = ''
                                 root.ids.retrieve2.text = ''
+                                root.ids.error_log.text = ''
                                 root.transition.direction = 'right'
                                 root.current = 'log_in'
                                 app.connect()
@@ -346,6 +349,7 @@ ScreenManager:
                             on_press:
                                 root.ids.retrieve.text = ''
                                 root.ids.retrieve2.text = ''
+                                root.ids.error_log.text = ''
                                 root.transition.direction = 'right'
                                 root.current = 'selection'
                                 app.clear()
@@ -354,6 +358,7 @@ ScreenManager:
                         height: 100
                         text: 'Return to Medications Screen'
                         on_press:
+                            root.ids.error_log.text = ''
                             root.transition.direction = 'right'
                             root.current = 'medication'
-                            app.clear()
+                            app.clear_limited()
