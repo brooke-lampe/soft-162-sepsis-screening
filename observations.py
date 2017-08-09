@@ -3,12 +3,6 @@ __app_package__ = 'edu.sepsis'
 
 class Observation:
 
-    #Data members
-    obs_type = ''
-    obs_string = ''
-    obs_value = 0
-    obs_datetime = ''
-
     def __init__(self, obs_type, obs_string, obs_value, obs_datetime):
         self.obs_type = obs_type
         self.obs_string = obs_string
@@ -24,10 +18,6 @@ class Observation:
 
 class Diagnosis:
 
-    #Data memebers
-    diagnosis_string = ''
-    obs_datetime = ''
-
     def __init__(self, diagnosis_string, obs_datetime):
         self.obs_string = diagnosis_string
         self.obs_datetime = obs_datetime
@@ -40,10 +30,6 @@ class Diagnosis:
 
 
 class Creatinine(Observation):
-
-    #Data memebers
-    obs_baseline = 0
-    visit_id = ''
 
     def __init__(self, obs_type, obs_string, obs_value, obs_baseline,  obs_datetime, visit_uuid):
         super(Creatinine, self).__init__(obs_type, obs_string, obs_value, obs_datetime)

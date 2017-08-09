@@ -21,19 +21,20 @@ class RestApp(App):
     taking_heparin = BooleanProperty()
     advance = [True, True, True]
 
-    # Data members
-    lab_observations = {}
-    vitals_observations = {}
-    diagnosis_observations = {}
-    SIRS_criteria = []
-    organ_criteria = []
-    suggested_labs = []
-
     global patient_info
     patient_info = 'Patient has no data.'
 
     def __init__(self, **kwargs):
         super(RestApp, self).__init__(**kwargs)
+
+        # Data members
+        self.lab_observations = {}
+        self.vitals_observations = {}
+        self.diagnosis_observations = {}
+        self.SIRS_criteria = []
+        self.organ_criteria = []
+        self.suggested_labs = []
+
         url = MedicationsDatabase.construct_mysql_url('cse.unl.edu', 3306, 'kheyen', 'kheyen', 'AdJ:8w')
         self.medications_database = MedicationsDatabase(url)
         self.session = self.medications_database.create_session()
