@@ -12,7 +12,7 @@ from openmrs import RESTConnection
 __app_package__ = 'edu.sepsis'
 __app__ = 'Sepsis'
 __version__ = '1.0'
-__flags__ = ['--bootstrap=sdl2', '--requirements=python2,kivy', '--permission=INTERNET']
+__flags__ = ['--bootstrap=sdl2', '--requirements=python2,kivy,pyjnius,sqlalchemy,mysql_connector', '--permission=INTERNET']
 
 class RestApp(App):
     message = StringProperty()
@@ -25,6 +25,7 @@ class RestApp(App):
     patient_info = 'Patient has no data.'
 
     def __init__(self, **kwargs):
+
         super(RestApp, self).__init__(**kwargs)
 
         # Data members
@@ -38,26 +39,7 @@ class RestApp(App):
         url = MedicationsDatabase.construct_mysql_url('cse.unl.edu', 3306, 'kheyen', 'kheyen', 'AdJ:8w')
         self.medications_database = MedicationsDatabase(url)
         self.session = self.medications_database.create_session()
-
-        self.vitals_observations = {'Temperature (C)': Observation('Vitals', 'Temperature (C)', 0, 0),
-                                    'Pulse': Observation('Vitals', 'Pulse', 0, 0),
-                                    'Respiratory rate': Observation('Vitals', 'Respiratory rate', 0, 0),
-                                    'Systolic blood pressure': Observation('Vitals', 'Systolic blood pressure', 0, 0),
-                                    'Diastolic blood pressure': Observation('Vitals', 'Diastolic blood pressure', 0, 0)}
-
-        self.lab_observations = {'Leukocytes (#/mL)': Observation('Labs', 'Leukocytes (#/mL)', 0, 0),
-                                        'Blasts per 100 Leukocytes (%)': Observation('Labs', 'Blasts per 100 Leukocytes (%)', 0, 0),
-                                        'Glucose in Blood (mg/dL)': Observation('Labs', 'Glucose in Blood (mg/dL)', 0, 0),
-                                        'Lactate in Blood (mmol/L)': Observation('Labs', 'Lactate in Blood (mmol/L)', 0, 0),
-                                        'Creatinine in Blood (mg/dL)': Creatinine('Labs', 'Creatinine in Blood (mg/dL)', 0, 0, 0, 0),
-                                        'Bilirubin Total (mg/dL)': Observation('Labs', 'Bilirubin Total (mg/dL)', 0, 0),
-                                        'Platelets (#/mL)': Observation('Labs', 'Platelets (#/mL)', 0, 0),
-                                        'Partial Thromboplastin Time (s)': Observation('Labs', 'Partial Thromboplastin Time (s)', 0, 0),
-                                        'Blood Cultures, Viruses': Observation('Labs', 'Blood Cultures, Viruses', 0, 0),
-                                        'Blood Cultures, Bacteria': Observation('Labs', 'Blood Cultures, Bacteria', 0, 0),
-                                        'Blood Cultures, Fungus': Observation('Labs', 'Blood Cultures, Fungus', 0, 0),
-                                        'Urinalysis': Observation('Labs', 'Urinalysis', 0, 0)}
-
+        self.reset_dicts()
 
     def connect(self):
         self.openmrs_connection = RESTConnection(self.root.ids.authority.text, self.root.ids.port_number.text, self.root.ids.username.text, self.root.ids.password.text)
@@ -229,6 +211,7 @@ class RestApp(App):
         self.lab_observations.clear()
         self.vitals_observations.clear()
         self.diagnosis_observations.clear()
+        self.reset_dicts()
         global patient_info
         patient_info = 'Patient has no data.'
         self.root.ids.patient_info.text = ''
@@ -241,6 +224,25 @@ class RestApp(App):
         self.root.ids.treatment.text = ''
         self.root.ids.suggested_layout.clear_widgets()
 
+    def reset_dicts(self):
+        self.vitals_observations = {'Temperature (C)': Observation('Vitals', 'Temperature (C)', 0, 0),
+                                    'Pulse': Observation('Vitals', 'Pulse', 0, 0),
+                                    'Respiratory rate': Observation('Vitals', 'Respiratory rate', 0, 0),
+                                    'Systolic blood pressure': Observation('Vitals', 'Systolic blood pressure', 0, 0),
+                                    'Diastolic blood pressure': Observation('Vitals', 'Diastolic blood pressure', 0, 0)}
+
+        self.lab_observations = {'Leukocytes (#/mL)': Observation('Labs', 'Leukocytes (#/mL)', 0, 0),
+                                        'Blasts per 100 Leukocytes (%)': Observation('Labs', 'Blasts per 100 Leukocytes (%)', 0, 0),
+                                        'Glucose in Blood (mg/dL)': Observation('Labs', 'Glucose in Blood (mg/dL)', 0, 0),
+                                        'Lactate in Blood (mmol/L)': Observation('Labs', 'Lactate in Blood (mmol/L)', 0, 0),
+                                        'Creatinine in Blood (mg/dL)': Creatinine('Labs', 'Creatinine in Blood (mg/dL)', 0, 0, 0, 0),
+                                        'Bilirubin Total (mg/dL)': Observation('Labs', 'Bilirubin Total (mg/dL)', 0, 0),
+                                        'Platelets (#/mL)': Observation('Labs', 'Platelets (#/mL)', 0, 0),
+                                        'Partial Thromboplastin Time (s)': Observation('Labs', 'Partial Thromboplastin Time (s)', 0, 0),
+                                        'Blood Cultures, Viruses': Observation('Labs', 'Blood Cultures, Viruses', 0, 0),
+                                        'Blood Cultures, Bacteria': Observation('Labs', 'Blood Cultures, Bacteria', 0, 0),
+                                        'Blood Cultures, Fungus': Observation('Labs', 'Blood Cultures, Fungus', 0, 0),
+                                        'Urinalysis': Observation('Labs', 'Urinalysis', 0, 0)}
     def clear_limited(self):
         self.root.ids.patient_info.text = ''
         self.root.ids.determination_timestamp.text = ''
