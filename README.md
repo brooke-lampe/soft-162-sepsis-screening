@@ -13,3 +13,4 @@ Contains:  determination.py, main.py, medications.py, medications_installer.py, 
 Project Status:  Complete, no known bugs or issues
 
 Install Instructions:  Run medications_installer.py
+open PyCharm-"soft_162_sepsis_screening"-"medications_installer.py"-Click "run"
